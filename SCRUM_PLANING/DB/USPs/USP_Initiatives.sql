@@ -31,41 +31,24 @@ BEGIN
     IF @i_initiativeCreationDate IS NULL
         SET @i_initiativeCreationDate = GETDATE();
 
-    IF @i_initiativeModificationDate IS NULL
-        SET @i_initiativeModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
-        IF ISNULL(@i_initiativeSummary,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL RESUMEN DE LA INICIATIVA ES OBLIGATORIO';
-        END;
+        SELECT 
+            @o_Numero = 400,
+            @o_MensajeUsuario = CASE 
+                WHEN ISNULL(@i_initiativeSummary,'') = '' THEN 'EL RESUMEN DE LA INICIATIVA ES OBLIGATORIO'
+                WHEN ISNULL(@i_initiativeDescription,'') = '' THEN 'LA DESCRIPCION DE LA INICIATIVA ES OBLIGATORIA'
+                WHEN ISNULL(@i_initiativeOwner,0) = 0 THEN 'EL DUEÑO DE LA INICIATIVA ES OBLIGATORIO'
+                WHEN ISNULL(@i_initiativeBusinessValue,0) = 0 THEN 'EL VALOR DE NEGOCIO ES OBLIGATORIO'
+                WHEN ISNULL(@i_initiativeStatus,0) = 0 THEN 'EL ESTADO DE LA INICIATIVA ES OBLIGATORIO'
+                ELSE NULL
+            END;
 
-        ELSE IF ISNULL(@i_initiativeDescription,'') = ''
+        IF @o_Numero = 400
         BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA DESCRIPCION DE LA INICIATIVA ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_initiativeOwner,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL DUEÑO DE LA INICIATIVA ES OBLIGATORIO';
-        END;
-
-        ELSE IF ISNULL(@i_initiativeBusinessValue,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL VALOR DE NEGOCIO ES OBLIGATORIO';
-        END;
-
-        ELSE IF ISNULL(@i_initiativeStatus,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL ESTADO DE LA INICIATIVA ES OBLIGATORIO';
-        END;
+            RETURN;
+        END
 
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Users] (NOLOCK) WHERE userId = @i_initiativeOwner)
         BEGIN
@@ -99,8 +82,8 @@ BEGIN
                 VALUES(
                     @i_initiativeSummary, @i_initiativeDescription, @i_initiativeOwner, @i_initiativeGoals, 
                     @i_initiativeBusinessValue, @i_initiativeTargetStart, @i_initiativeTargetEnd, 
-                    @i_initiativeCreationDate, @i_initiativeCreatorId, @i_initiativeModificationDate, 
-                    @i_initiativeModificatorId, @i_initiativeStatus
+                    @i_initiativeCreationDate, @i_initiativeCreatorId, NULL, 
+                    NULL, @i_initiativeStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_INITIATIVE;
@@ -163,6 +146,9 @@ BEGIN
             BEGIN TRANSACTION TRX_UPD_INITIATIVE;
 
             BEGIN TRY
+                IF @i_initiativeModificationDate IS NULL
+                    SET @i_initiativeModificationDate = GETDATE();
+
                 UPDATE [SQM_GENERAL].[TBL_Initiatives]
                 SET initiativeSummary = COALESCE(@i_initiativeSummary, initiativeSummary),
                     initiativeDescription = COALESCE(@i_initiativeDescription, initiativeDescription),

@@ -1,4 +1,7 @@
-REATE OR ALTER PROC [SQM_CATALOGS].[USP_Status]
+USE DB_SCRUM_PLANNING
+GO
+
+CREATE OR ALTER PROC [SQM_CATALOGS].[USP_Status]
 (
     @i_statusId INT = NULL,
     @i_statusName VARCHAR(80) = NULL,
@@ -17,7 +20,7 @@ REATE OR ALTER PROC [SQM_CATALOGS].[USP_Status]
 AS
 BEGIN
 
-DECLARE @w_totalRows INT;
+    DECLARE @w_totalRows INT;
 
     IF @i_statusCreationDate IS NULL
         SET @i_statusCreationDate = GETDATE();
@@ -32,7 +35,7 @@ DECLARE @w_totalRows INT;
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL NOMBRE DEL ESTADO ES OBLIGATORIO';
-        END;
+        end;
 
         ELSE IF EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Status] (NOLOCK) WHERE statusName = @i_statusName)
         BEGIN
@@ -73,10 +76,23 @@ DECLARE @w_totalRows INT;
             SET @o_MensajeUsuario = 'EL ID DEL ESTADO ES OBLIGATORIO';
         END;
 
+        ELSE IF ISNULL(@i_statusModificatorId,0) = 0
+        BEGIN
+            SET @o_Numero = 400;
+            SET @o_MensajeUsuario = 'EL ID DEL MODIFICADOR ES OBLIGATORIO';
+        END;
+
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Status] (NOLOCK) WHERE statusId = @i_statusId)
         BEGIN
             SET @o_Numero = 404;
             SET @o_MensajeUsuario = 'EL ESTADO NO EXISTE';
+        END;
+
+        ELSE IF @i_statusName IS NOT NULL AND
+            EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Status] (NOLOCK) WHERE statusName = @i_statusName AND statusId <> @i_statusId)
+        BEGIN
+            SET @o_Numero = 400;
+            SET @o_MensajeUsuario = 'EL NOMBRE DEL ESTADO YA EXISTE';
         END;
         
         ELSE
@@ -99,13 +115,16 @@ DECLARE @w_totalRows INT;
             END TRY
             BEGIN CATCH
                 ROLLBACK TRANSACTION TRX_UPD_STATUS;
+
+                SET @o_Numero = 500;
+                SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR EL ESTADO';
+                SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL ACTUALIZAR ESTADO', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
             END CATCH
         END
     END
 
--- SELECT
-
-   ELSE IF @w_Accion = 'S'
+    -- SELECT
+    ELSE IF @w_Accion = 'S'
     BEGIN
         BEGIN TRY
             SELECT 
@@ -136,11 +155,14 @@ DECLARE @w_totalRows INT;
 
         END TRY
         BEGIN CATCH
+            SET @o_Numero = 500;
+            SET @o_MensajeUsuario = 'ERROR AL LISTAR LOS ESTADOS';
+            SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL LISTAR ESTADOS', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
         END CATCH
     END
 
- -- ACCION INVALIDA
-ELSE
+    -- ACCION INVALIDA
+    ELSE
     BEGIN
         SET @o_Numero = 405;
         SET @o_MensajeUsuario = 'METODO NO HABILITADO';
@@ -148,3 +170,4 @@ ELSE
     END
 
 END;
+GO

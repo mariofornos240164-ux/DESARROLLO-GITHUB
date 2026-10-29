@@ -35,9 +35,6 @@ BEGIN
     IF @i_taskCreationDate IS NULL
         SET @i_taskCreationDate = GETDATE();
 
-    IF @i_taskModificationDate IS NULL
-        SET @i_taskModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -110,7 +107,7 @@ BEGIN
                     @i_taskSummary, @i_taskDescription, @i_taskOwner, @i_taskParentLink, 
                     @i_taskOriginalEstimate, @i_taskCompletedWork, @i_taskRemaningWork, 
                     @i_taskStartDate, @i_taskCompletedDate, @i_taskDueDate, @i_taskActivityType, 
-                    @i_taskCreationDate, @i_taskCreatorId, @i_taskModificationDate, @i_taskModificatorId, @i_taskStatus
+                    @i_taskCreationDate, @i_taskCreatorId, NULL, NULL, @i_taskStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_TASK;

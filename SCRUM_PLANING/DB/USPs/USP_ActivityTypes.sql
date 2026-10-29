@@ -1,4 +1,4 @@
-USE [DB_SCRUM_PLANNING]
+USE DB_SCRUM_PLANNING
 GO
 
 CREATE OR ALTER PROC [SQM_CATALOGS].[USP_ActivityTypes]
@@ -25,9 +25,6 @@ BEGIN
     IF @i_activityTypeCreationDate IS NULL
         SET @i_activityTypeCreationDate = GETDATE();
 
-    IF @i_activityTypeModificationDate IS NULL
-        SET @i_activityTypeModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -45,7 +42,7 @@ BEGIN
         
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_INS_ACTIVITYTYPE;
+            BEGIN TRANSACTION TRX_INS_ACT;
 
             BEGIN TRY
                 INSERT INTO [SQM_CATALOGS].[TBL_ActivityTypes](
@@ -54,17 +51,17 @@ BEGIN
                 )
                 VALUES(
                     @i_activityTypeName, @i_activityTypeCreationDate, @i_activityTypeCreatorId, 
-                    @i_activityTypeModificationDate, @i_activityTypeModificatorId, 1
+                    NULL, NULL, 1
                 );
 
-                COMMIT TRANSACTION TRX_INS_ACTIVITYTYPE;
+                COMMIT TRANSACTION TRX_INS_ACT;
 
                 SET @o_Numero = 201;
                 SET @o_MensajeUsuario = 'TIPO DE ACTIVIDAD REGISTRADO CORRECTAMENTE';
 
             END TRY
             BEGIN CATCH
-                ROLLBACK TRANSACTION TRX_INS_ACTIVITYTYPE;
+                ROLLBACK TRANSACTION TRX_INS_ACT;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL REGISTRAR EL TIPO DE ACTIVIDAD';
@@ -103,9 +100,12 @@ BEGIN
         
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_UPD_ACTIVITYTYPE;
+            BEGIN TRANSACTION TRX_UPD_ACT;
 
             BEGIN TRY
+                IF @i_activityTypeModificationDate IS NULL
+                    SET @i_activityTypeModificationDate = GETDATE();
+
                 UPDATE [SQM_CATALOGS].[TBL_ActivityTypes]
                 SET activityTypeName = COALESCE(@i_activityTypeName, activityTypeName),
                     activityTypeModificationDate = @i_activityTypeModificationDate,
@@ -113,14 +113,14 @@ BEGIN
                     activityTypeEnable = COALESCE(@i_activityTypeEnable, activityTypeEnable)
                 WHERE activityTypeId = @i_activityTypeId;
 
-                COMMIT TRANSACTION TRX_UPD_ACTIVITYTYPE;
+                COMMIT TRANSACTION TRX_UPD_ACT;
 
                 SET @o_Numero = 200;
                 SET @o_MensajeUsuario = 'TIPO DE ACTIVIDAD ACTUALIZADO CORRECTAMENTE';
 
             END TRY
             BEGIN CATCH
-                ROLLBACK TRANSACTION TRX_UPD_ACTIVITYTYPE;
+                ROLLBACK TRANSACTION TRX_UPD_ACT;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR EL TIPO DE ACTIVIDAD';

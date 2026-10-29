@@ -1,3 +1,6 @@
+USE DB_SCRUM_PLANNING
+GO
+
 CREATE OR ALTER PROC [SQM_CATALOGS].[USP_BusinessValues]
 (
     @i_businessValueId INT = NULL,
@@ -22,9 +25,6 @@ BEGIN
     IF @i_businessValueCreationDate IS NULL
         SET @i_businessValueCreationDate = GETDATE();
 
-    IF @i_businessValueModificationDate IS NULL
-        SET @i_businessValueModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -42,20 +42,26 @@ BEGIN
         
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_INS_BUSVAL;
+            BEGIN TRANSACTION TRX_INS_BV;
 
             BEGIN TRY
-                INSERT INTO [SQM_CATALOGS].[TBL_BusinessValues](businessValueName, businessValueCreationDate, businessValueCreatorId, businessValueModificationDate, businessValueModificatorId, businessValueEnable)
-                VALUES(@i_businessValueName, @i_businessValueCreationDate, @i_businessValueCreatorId, @i_businessValueModificationDate, @i_businessValueModificatorId, 1);
+                INSERT INTO [SQM_CATALOGS].[TBL_BusinessValues](
+                    businessValueName, businessValueCreationDate, businessValueCreatorId, 
+                    businessValueModificationDate, businessValueModificatorId, businessValueEnable
+                )
+                VALUES(
+                    @i_businessValueName, @i_businessValueCreationDate, @i_businessValueCreatorId, 
+                    NULL, NULL, 1
+                );
 
-                COMMIT TRANSACTION TRX_INS_BUSVAL;
+                COMMIT TRANSACTION TRX_INS_BV;
 
                 SET @o_Numero = 201;
                 SET @o_MensajeUsuario = 'VALOR DE NEGOCIO REGISTRADO CORRECTAMENTE';
 
             END TRY
             BEGIN CATCH
-                ROLLBACK TRANSACTION TRX_INS_BUSVAL;
+                ROLLBACK TRANSACTION TRX_INS_BV;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL REGISTRAR EL VALOR DE NEGOCIO';
@@ -94,9 +100,12 @@ BEGIN
         
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_UPD_BUSVAL;
+            BEGIN TRANSACTION TRX_UPD_BV;
 
             BEGIN TRY
+                IF @i_businessValueModificationDate IS NULL
+                    SET @i_businessValueModificationDate = GETDATE();
+
                 UPDATE [SQM_CATALOGS].[TBL_BusinessValues]
                 SET businessValueName = COALESCE(@i_businessValueName, businessValueName),
                     businessValueModificationDate = @i_businessValueModificationDate,
@@ -104,14 +113,14 @@ BEGIN
                     businessValueEnable = COALESCE(@i_businessValueEnable, businessValueEnable)
                 WHERE businessValueId = @i_businessValueId;
 
-                COMMIT TRANSACTION TRX_UPD_BUSVAL;
+                COMMIT TRANSACTION TRX_UPD_BV;
 
                 SET @o_Numero = 200;
                 SET @o_MensajeUsuario = 'VALOR DE NEGOCIO ACTUALIZADO CORRECTAMENTE';
 
             END TRY
             BEGIN CATCH
-                ROLLBACK TRANSACTION TRX_UPD_BUSVAL;
+                ROLLBACK TRANSACTION TRX_UPD_BV;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR EL VALOR DE NEGOCIO';

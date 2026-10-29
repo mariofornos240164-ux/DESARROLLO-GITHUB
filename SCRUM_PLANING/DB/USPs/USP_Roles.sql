@@ -1,12 +1,15 @@
+USE DB_SCRUM_PLANNING
+GO
+
 CREATE OR ALTER PROC [SQM_SECURITY].[USP_Roles]
 (
-    @I_rolId INT = NULL,
-    @I_rolName VARCHAR(80) = NULL,
-    @I_rolCreationDate DATETIME = NULL,
-    @I_rolCreatorId INT = NULL,
-    @I_rolModificationDate DATETIME = NULL,
-    @I_rolModificatorId INT = NULL,
-    @I_rolEnable BIT = NULL,
+    @i_rolId INT = NULL,
+    @i_rolName VARCHAR(80) = NULL,
+    @i_rolCreationDate DATETIME = NULL,
+    @i_rolCreatorId INT = NULL,
+    @i_rolModificationDate DATETIME = NULL,
+    @i_rolModificatorId INT = NULL,
+    @i_rolEnable BIT = NULL,
     @i_PageNumber INT = NULL,
     @i_RowsPerPage INT = NULL,
     @w_Accion CHAR(1),
@@ -17,7 +20,7 @@ CREATE OR ALTER PROC [SQM_SECURITY].[USP_Roles]
 AS
 BEGIN
 
-DECLARE @w_totalRows INT;
+    DECLARE @w_totalRows INT;
 
     IF @i_rolCreationDate IS NULL
         SET @i_rolCreationDate = GETDATE();
@@ -28,13 +31,13 @@ DECLARE @w_totalRows INT;
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
-        IF ISNULL(@I_rolName,'') = ''
+        IF ISNULL(@i_rolName,'') = ''
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL NOMBRE DEL ROL ES OBLIGATORIO';
         END;
 
-        ELSE IF EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolName = @I_rolName)
+        ELSE IF EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolName = @i_rolName)
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL NOMBRE DEL ROL YA EXISTE';
@@ -46,7 +49,7 @@ DECLARE @w_totalRows INT;
 
             BEGIN TRY
                 INSERT INTO [SQM_SECURITY].[TBL_Roles](rolName, rolCreationDate, rolCreatorId, rolModificationDate, rolModificatorId, rolEnable)
-                VALUES(@i_rolName, @i_rolCreationDate, @i_rolCreatorId, @i_rolModificationDate, @i_rolModificatorId, 1);
+                VALUES(@i_rolName, @i_rolCreationDate, @i_rolCreatorId, NULL, NULL, 1);
 
                 COMMIT TRANSACTION TRX_INS_ROL;
 
@@ -67,16 +70,29 @@ DECLARE @w_totalRows INT;
     -- UPDATE
     ELSE IF @w_Accion = 'U'
     BEGIN
-        IF ISNULL(@I_rolId,0) = 0
+        IF ISNULL(@i_rolId,0) = 0
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL ID DEL ROL ES OBLIGATORIO';
         END;
 
-        ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolId = @I_rolId)
+        ELSE IF ISNULL(@i_rolModificatorId,0) = 0
+        BEGIN
+            SET @o_Numero = 400;
+            SET @o_MensajeUsuario = 'EL ID DEL MODIFICADOR ES OBLIGATORIO';
+        END;
+
+        ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolId = @i_rolId)
         BEGIN
             SET @o_Numero = 404;
             SET @o_MensajeUsuario = 'EL ROL NO EXISTE';
+        END;
+
+        ELSE IF @i_rolName IS NOT NULL AND
+            EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolName = @i_rolName AND rolId <> @i_rolId)
+        BEGIN
+            SET @o_Numero = 400;
+            SET @o_MensajeUsuario = 'EL NOMBRE DEL ROL YA EXISTE';
         END;
         
         ELSE
@@ -99,22 +115,26 @@ DECLARE @w_totalRows INT;
             END TRY
             BEGIN CATCH
                 ROLLBACK TRANSACTION TRX_UPD_ROL;
+
+                SET @o_Numero = 500;
+                SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR EL ROL';
+                SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL ACTUALIZAR ROL', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
             END CATCH
         END
     END
 
--- SELECT
-   ELSE IF @w_Accion = 'S'
+    -- SELECT
+    ELSE IF @w_Accion = 'S'
     BEGIN
         BEGIN TRY
             SELECT 
-	            rolId,
-	            rolName,
-	            rolCreationDate,
-	            rolCreatorId,
-	            rolModificationDate,
-	            rolModificatorId,
-	            rolEnable
+                rolId,
+                rolName,
+                rolCreationDate,
+                rolCreatorId,
+                rolModificationDate,
+                rolModificatorId,
+                rolEnable
             FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK)
             ORDER BY rolId
             OFFSET (@i_PageNumber - 1) * @i_RowsPerPage ROWS
@@ -141,8 +161,8 @@ DECLARE @w_totalRows INT;
         END CATCH
     END
 
- -- ACCION INVALIDA
-ELSE
+    -- ACCION INVALIDA
+    ELSE
     BEGIN
         SET @o_Numero = 405;
         SET @o_MensajeUsuario = 'METODO NO HABILITADO';
@@ -150,3 +170,4 @@ ELSE
     END
 
 END;
+GO

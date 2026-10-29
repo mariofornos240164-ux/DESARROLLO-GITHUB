@@ -29,53 +29,36 @@ BEGIN
     IF @i_epicCreationDate IS NULL
         SET @i_epicCreationDate = GETDATE();
 
-    IF @i_epicModificationDate IS NULL
-        SET @i_epicModificationDate = GETDATE();
-
     -- INSERTAR
-    IF @w_Accion = 'I'
-    BEGIN
-        IF ISNULL(@i_epicName,'') = ''
+      IF @w_Accion = 'I'
         BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL NOMBRE DE LA EPICA ES OBLIGATORIO';
-        END;
+            -- Validación centralizada de campos obligatorios
+            SELECT 
+                @o_Numero = 400,
+                @o_MensajeUsuario = CASE 
+                    WHEN ISNULL(@i_epicName,'') = '' THEN 'EL NOMBRE DE LA EPICA ES OBLIGATORIO'
+                    WHEN ISNULL(@i_epicSummary,'') = '' THEN 'EL RESUMEN DE LA EPICA ES OBLIGATORIO'
+                    WHEN ISNULL(@i_epicDescription,'') = '' THEN 'LA DESCRIPCION DE LA EPICA ES OBLIGATORIA'
+                    WHEN ISNULL(@i_epicParentLink,0) = 0 THEN 'LA INICIATIVA ASOCIADA (PARENT LINK) ES OBLIGATORIA'
+                    WHEN ISNULL(@i_epicOwner,0) = 0 THEN 'EL DUEÑO DE LA EPICA ES OBLIGATORIO'
+                    WHEN ISNULL(@i_epicStatus,0) = 0 THEN 'EL ESTADO DE LA EPICA ES OBLIGATORIO'
+                    ELSE NULL
+                END;
 
-        ELSE IF ISNULL(@i_epicSummary,'') = ''
+        -- Si alguna condición del CASE se cumplió (@o_Numero tendrá valor 400)
+        IF @o_Numero = 400
         BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL RESUMEN DE LA EPICA ES OBLIGATORIO';
-        END;
+            -- Aquí se detiene y no avanza
+            RETURN;
+        END
 
-        ELSE IF ISNULL(@i_epicDescription,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA DESCRIPCION DE LA EPICA ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_epicParentLink,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA INICIATIVA ASOCIADA (PARENT LINK) ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_epicOwner,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL DUEÑO DE LA EPICA ES OBLIGATORIO';
-        END;
-
-        ELSE IF ISNULL(@i_epicStatus,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL ESTADO DE LA EPICA ES OBLIGATORIO';
-        END;
-
+        -- Validaciones de existencia en tablas foráneas (FKs)
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_GENERAL].[TBL_Initiatives] (NOLOCK) WHERE initiativeId = @i_epicParentLink)
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'LA INICIATIVA ASOCIADA NO EXISTE';
-        END;
+        END
+        -- ... (continuarías con las demás FKs de forma limpia)
 
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Users] (NOLOCK) WHERE userId = @i_epicOwner)
         BEGIN
@@ -108,7 +91,7 @@ BEGIN
                 VALUES(
                     @i_epicName, @i_epicSummary, @i_epicDescription, @i_epicParentLink, @i_epicOwner, 
                     @i_epicStartDate, @i_epicDueDate, @i_epicPriority, @i_epicCreationDate, 
-                    @i_epicCreatorId, @i_epicModificationDate, @i_epicModificatorId, @i_epicStatus
+                    @i_epicCreatorId, NULL, NULL, @i_epicStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_EPIC;

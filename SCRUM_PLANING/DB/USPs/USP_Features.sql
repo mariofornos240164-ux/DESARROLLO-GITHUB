@@ -32,47 +32,25 @@ BEGIN
     IF @i_featureCreationDate IS NULL
         SET @i_featureCreationDate = GETDATE();
 
-    IF @i_featureModificationDate IS NULL
-        SET @i_featureModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
-        IF ISNULL(@i_featureSummary,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL RESUMEN DE LA FEATURE ES OBLIGATORIO';
-        END;
+        SELECT 
+            @o_Numero = 400,
+            @o_MensajeUsuario = CASE 
+                WHEN ISNULL(@i_featureSummary,'') = '' THEN 'EL RESUMEN DE LA FEATURE ES OBLIGATORIO'
+                WHEN ISNULL(@i_featureDescription,'') = '' THEN 'LA DESCRIPCION DE LA FEATURE ES OBLIGATORIA'
+                WHEN ISNULL(@i_featuresAcceptanceCriteria,'') = '' THEN 'LOS CRITERIOS DE ACEPTACION SON OBLIGATORIOS'
+                WHEN ISNULL(@i_featureParentLink,0) = 0 THEN 'LA EPICA ASOCIADA (PARENT LINK) ES OBLIGATORIA'
+                WHEN ISNULL(@i_featureOwner,0) = 0 THEN 'EL DUEÑO DE LA FEATURE ES OBLIGATORIO'
+                WHEN ISNULL(@i_featureStatus,0) = 0 THEN 'EL ESTADO DE LA FEATURE ES OBLIGATORIO'
+                ELSE NULL
+            END;
 
-        ELSE IF ISNULL(@i_featureDescription,'') = ''
+        IF @o_Numero = 400
         BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA DESCRIPCION DE LA FEATURE ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_featuresAcceptanceCriteria,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LOS CRITERIOS DE ACEPTACION SON OBLIGATORIOS';
-        END;
-
-        ELSE IF ISNULL(@i_featureParentLink,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA EPICA ASOCIADA (PARENT LINK) ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_featureOwner,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL DUEÑO DE LA FEATURE ES OBLIGATORIO';
-        END;
-
-        ELSE IF ISNULL(@i_featureStatus,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL ESTADO DE LA FEATURE ES OBLIGATORIO';
-        END;
+            RETURN;
+        END
 
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_GENERAL].[TBL_Epics] (NOLOCK) WHERE epicId = @i_featureParentLink)
         BEGIN
@@ -113,7 +91,7 @@ BEGIN
                     @i_featureSummary, @i_featureDescription, @i_featuresAcceptanceCriteria, 
                     @i_featureParentLink, @i_featureOwner, @i_featureStartDate, @i_featureDueDate, 
                     @i_featurePriority, @i_featureCreationDate, @i_featureCreatorId, 
-                    @i_featureModificationDate, @i_featureModificatorId, @i_featureStatus
+                    NULL, NULL, @i_featureStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_FEATURE;
@@ -182,6 +160,10 @@ BEGIN
             BEGIN TRANSACTION TRX_UPD_FEATURE;
 
             BEGIN TRY
+                -- Asignar fecha actual si no viene especificada en la modificación
+                IF @i_featureModificationDate IS NULL
+                    SET @i_featureModificationDate = GETDATE();
+
                 UPDATE [SQM_GENERAL].[TBL_Features]
                 SET featureSummary = COALESCE(@i_featureSummary, featureSummary),
                     featureDescription = COALESCE(@i_featureDescription, featureDescription),

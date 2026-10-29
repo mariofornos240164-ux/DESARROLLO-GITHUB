@@ -33,47 +33,25 @@ BEGIN
     IF @i_PBICreationDate IS NULL
         SET @i_PBICreationDate = GETDATE();
 
-    IF @i_PBIModificationDate IS NULL
-        SET @i_PBIModificationDate = GETDATE();
-
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
-        IF ISNULL(@i_PBISummary,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL RESUMEN DEL PBI ES OBLIGATORIO';
-        END;
+        SELECT 
+            @o_Numero = 400,
+            @o_MensajeUsuario = CASE 
+                WHEN ISNULL(@i_PBISummary,'') = '' THEN 'EL RESUMEN DEL PBI ES OBLIGATORIO'
+                WHEN ISNULL(@i_PBIDescription,'') = '' THEN 'LA DESCRIPCION DEL PBI ES OBLIGATORIA'
+                WHEN ISNULL(@i_PBIsAcceptanceCriteria,'') = '' THEN 'LOS CRITERIOS DE ACEPTACION SON OBLIGATORIOS'
+                WHEN ISNULL(@i_PBIOwner,0) = 0 THEN 'EL DUEÑO DEL PBI ES OBLIGATORIO'
+                WHEN ISNULL(@i_PBIParentLink,0) = 0 THEN 'LA FEATURE ASOCIADA (PARENT LINK) ES OBLIGATORIA'
+                WHEN ISNULL(@i_PBIStatus,0) = 0 THEN 'EL ESTADO DEL PBI ES OBLIGATORIO'
+                ELSE NULL
+            END;
 
-        ELSE IF ISNULL(@i_PBIDescription,'') = ''
+        IF @o_Numero = 400
         BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA DESCRIPCION DEL PBI ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_PBIsAcceptanceCriteria,'') = ''
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LOS CRITERIOS DE ACEPTACION SON OBLIGATORIOS';
-        END;
-
-        ELSE IF ISNULL(@i_PBIOwner,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL DUEÑO DEL PBI ES OBLIGATORIO';
-        END;
-
-        ELSE IF ISNULL(@i_PBIParentLink,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'LA FEATURE ASOCIADA (PARENT LINK) ES OBLIGATORIA';
-        END;
-
-        ELSE IF ISNULL(@i_PBIStatus,0) = 0
-        BEGIN
-            SET @o_Numero = 400;
-            SET @o_MensajeUsuario = 'EL ESTADO DEL PBI ES OBLIGATORIO';
-        END;
+            RETURN;
+        END
 
         ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_GENERAL].[TBL_Features] (NOLOCK) WHERE featureId = @i_PBIParentLink)
         BEGIN
@@ -114,7 +92,7 @@ BEGIN
                     @i_PBISummary, @i_PBIDescription, @i_PBIsAcceptanceCriteria, @i_PBIOwner, 
                     @i_PBIParentLink, @i_PBIStoryPoint, @i_PBIStartDate, @i_PBIDueDate, 
                     @i_PBIPriority, @i_PBICreationDate, @i_PBICreatorId, 
-                    @i_PBIModificationDate, @i_PBIModificatorId, @i_PBIStatus
+                    NULL, NULL, @i_PBIStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_PBI;
@@ -183,6 +161,9 @@ BEGIN
             BEGIN TRANSACTION TRX_UPD_PBI;
 
             BEGIN TRY
+                IF @i_PBIModificationDate IS NULL
+                    SET @i_PBIModificationDate = GETDATE();
+
                 UPDATE [SQM_GENERAL].[TBL_ProductBacklogItems]
                 SET PBISummary = COALESCE(@i_PBISummary, PBISummary),
                     PBIDescription = COALESCE(@i_PBIDescription, PBIDescription),

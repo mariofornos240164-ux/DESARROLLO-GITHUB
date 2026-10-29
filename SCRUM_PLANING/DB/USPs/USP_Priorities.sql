@@ -1,3 +1,6 @@
+USE DB_SCRUM_PLANNING
+GO
+
 CREATE OR ALTER PROC [SQM_CATALOGS].[USP_Priorities]
 (
     @i_priorityId INT = NULL,
@@ -120,7 +123,7 @@ BEGIN
                 ROLLBACK TRANSACTION TRX_UPD_PRIORITY;
 
                 SET @o_Numero = 500;
-                SET @o_MensajeUsuario = 'ERROR AL REGISTRAR LA ACTUALIZACION'; -- o actualizar la prioridad
+                SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR LA PRIORIDAD';
                 SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL ACTUALIZAR PRIORIDAD', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
             END CATCH
         END
