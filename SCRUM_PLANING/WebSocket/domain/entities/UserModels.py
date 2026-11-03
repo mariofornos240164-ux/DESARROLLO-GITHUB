@@ -17,7 +17,7 @@ class UserBase(BaseModel):
 class UserCreate(BaseModel):
     userFullName: str
     userName: str
-    userName: str
+    userEmail: str
     userPassword: str
     userRolId: int
     userCreatorId: Optional[int] = None
@@ -26,7 +26,7 @@ class UserUpdate(BaseModel):
     userId: int
     userFullName: Optional[str] = None
     userName: Optional[str] = None
-    userName: Optional[str] = None
+    userEmai: Optional[str] = None
     userPassword: Optional[str] = None
     userRolId: Optional[int] = None
     userModificationDate: Optional[datetime] = None
