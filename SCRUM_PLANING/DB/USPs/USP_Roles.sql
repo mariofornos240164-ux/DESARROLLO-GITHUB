@@ -28,6 +28,9 @@ BEGIN
     IF @i_rolModificationDate IS NULL
         SET @i_rolModificationDate = GETDATE();
 
+    IF @i_rolEnable IS NULL
+        SET @i_rolEnable = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -49,7 +52,7 @@ BEGIN
 
             BEGIN TRY
                 INSERT INTO [SQM_SECURITY].[TBL_Roles](rolName, rolCreationDate, rolCreatorId, rolModificationDate, rolModificatorId, rolEnable)
-                VALUES(@i_rolName, @i_rolCreationDate, @i_rolCreatorId, NULL, NULL, 1);
+                VALUES(@i_rolName, @i_rolCreationDate, @i_rolCreatorId, NULL, NULL, @i_rolEnable);
 
                 COMMIT TRANSACTION TRX_INS_ROL;
 

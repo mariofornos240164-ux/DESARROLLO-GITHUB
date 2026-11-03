@@ -25,6 +25,9 @@ BEGIN
     IF @i_businessValueCreationDate IS NULL
         SET @i_businessValueCreationDate = GETDATE();
 
+    IF @i_businessValueEnable IS NULL
+        SET @i_businessValueEnable = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -51,7 +54,7 @@ BEGIN
                 )
                 VALUES(
                     @i_businessValueName, @i_businessValueCreationDate, @i_businessValueCreatorId, 
-                    NULL, NULL, 1
+                    NULL, NULL, @i_businessValueEnable
                 );
 
                 COMMIT TRANSACTION TRX_INS_BV;

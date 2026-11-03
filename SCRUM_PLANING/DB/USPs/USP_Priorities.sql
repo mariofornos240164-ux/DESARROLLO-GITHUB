@@ -28,6 +28,9 @@ BEGIN
     IF @i_priorityModificationDate IS NULL
         SET @i_priorityModificationDate = GETDATE();
 
+    IF @i_priorityEnable IS NULL
+        SET @i_priorityEnable = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -54,7 +57,7 @@ BEGIN
                 )
                 VALUES(
                     @i_priorityName, @i_priorityCreationDate, @i_priorityCreatorId, 
-                    @i_priorityModificationDate, @i_priorityModificatorId, 1
+                    @i_priorityModificationDate, @i_priorityModificatorId, @i_priorityEnable
                 );
 
                 COMMIT TRANSACTION TRX_INS_PRIORITY;

@@ -29,6 +29,9 @@ BEGIN
     IF @i_userCreationDate IS NULL
         SET @i_userCreationDate = GETDATE();
 
+    IF @i_userEnable IS NULL
+        SET @i_userEnable = 1;
+
     -- INSERTAR USER --
     IF @w_Accion = 'I'
     BEGIN
@@ -79,7 +82,7 @@ BEGIN
                 CLOSE SYMMETRIC KEY KEY_HASH;
 
                 INSERT INTO [SQM_SECURITY].[TBL_Users](userFullName,userName,userEmail,userPassword,userRolId,userCreationDate,userCreatorId,userEnable)
-                VALUES(@i_userFullName,@i_userName,@i_userEmail,@w_userPasswordEncrypted,@i_userRolId,@i_userCreationDate,@i_userCreatorId,1);
+                VALUES(@i_userFullName,@i_userName,@i_userEmail,@w_userPasswordEncrypted,@i_userRolId,@i_userCreationDate,@i_userCreatorId,@i_userEnable);
 
                 COMMIT TRANSACTION TRX_INS_USER;
 

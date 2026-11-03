@@ -28,6 +28,9 @@ BEGIN
     IF @i_statusModificationDate IS NULL
         SET @i_statusModificationDate = GETDATE();
 
+    IF @i_statusEnable IS NULL
+        SET @i_statusEnable = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -35,7 +38,7 @@ BEGIN
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL NOMBRE DEL ESTADO ES OBLIGATORIO';
-        end;
+        END;
 
         ELSE IF EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Status] (NOLOCK) WHERE statusName = @i_statusName)
         BEGIN
@@ -49,7 +52,7 @@ BEGIN
 
             BEGIN TRY
                 INSERT INTO [SQM_CATALOGS].[TBL_Status](statusName, statusCreationDate, statusCreatorId, statusModificationDate, statusModificatorId, statusEnable)
-                VALUES(@i_statusName, @i_statusCreationDate, @i_statusCreatorId, @i_statusModificationDate, @i_statusModificatorId, 1);
+                VALUES(@i_statusName, @i_statusCreationDate, @i_statusCreatorId, @i_statusModificationDate, @i_statusModificatorId, @i_statusEnable);
 
                 COMMIT TRANSACTION TRX_INS_STATUS;
 

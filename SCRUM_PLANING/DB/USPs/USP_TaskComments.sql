@@ -30,6 +30,9 @@ BEGIN
     IF @i_taskCommentModificationDate IS NULL
         SET @i_taskCommentModificationDate = GETDATE();
 
+    IF @i_taskCommentStatus IS NULL
+        SET @i_taskCommentStatus = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -76,7 +79,7 @@ BEGIN
                 VALUES(
                     @i_taskCommentParentLink, @i_taskCommentOwner, @i_taskCommentText, 
                     @i_taskCommentCreationDate, @i_taskCommentCreatorId, 
-                    @i_taskCommentModificationDate, @i_taskCommentModificatorId, 1
+                    @i_taskCommentModificationDate, @i_taskCommentModificatorId, @i_taskCommentStatus
                 );
 
                 COMMIT TRANSACTION TRX_INS_TASKCOMMENT;

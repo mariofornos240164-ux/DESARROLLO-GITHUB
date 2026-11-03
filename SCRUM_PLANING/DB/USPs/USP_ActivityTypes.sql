@@ -25,6 +25,9 @@ BEGIN
     IF @i_activityTypeCreationDate IS NULL
         SET @i_activityTypeCreationDate = GETDATE();
 
+    IF @i_activityTypeEnable IS NULL
+        SET @i_activityTypeEnable = 1;
+
     -- INSERTAR
     IF @w_Accion = 'I'
     BEGIN
@@ -50,8 +53,7 @@ BEGIN
                     activityTypeModificationDate, activityTypeModificatorId, activityTypeEnable
                 )
                 VALUES(
-                    @i_activityTypeName, @i_activityTypeCreationDate, @i_activityTypeCreatorId, 
-                    NULL, NULL, 1
+                    @i_activityTypeName, @i_activityTypeCreationDate, @i_activityTypeCreatorId, NULL, NULL, @i_activityTypeEnable
                 );
 
                 COMMIT TRANSACTION TRX_INS_ACT;
