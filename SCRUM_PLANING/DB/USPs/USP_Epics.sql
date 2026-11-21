@@ -46,7 +46,7 @@ BEGIN
                 END;
 
         -- Si alguna condición del CASE se cumplió (@o_Numero tendrá valor 400)
-        IF @o_Numero = 400
+        IF @o_MensajeUsuario IS NOT NULL
         BEGIN
             -- Aquí se detiene y no avanza
             RETURN;

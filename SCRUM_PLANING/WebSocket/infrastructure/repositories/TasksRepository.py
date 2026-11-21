@@ -1,15 +1,15 @@
-from infrastructure.database.connection import get_connection
+from infrastructure.database.base_repository import BaseRepository
 from domain.entities.TaskModels import TaskCreate, TaskUpdate
+
+# pyodbc no puede leer parametros OUTPUT con "?".
+# Por eso se declaran las variables en el mismo query y al final se hace un SELECT con ellas.
 
 class TasksRepository:
     def insert_task(self, task: TaskCreate):
-        conn = get_connection()
-        cursor = conn.cursor()
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_GENERAL].[USP_Tasks]
                 @i_taskSummary = ?,
                 @i_taskDescription = ?,
@@ -25,9 +25,13 @@ class TasksRepository:
                 @i_taskCreatorId = ?,
                 @i_taskStatus = ?,
                 @w_Accion = 'I',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
+
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_operation(query, (
             task.taskSummary,
             task.taskDescription,
             task.taskOwner,
@@ -40,29 +44,14 @@ class TasksRepository:
             task.taskDueDate,
             task.taskActivityType,
             task.taskCreatorId,
-            task.taskStatus,
-            o_Numero,
-            o_Mensaje
+            task.taskStatus
         ))
 
-        result = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return {
-            "status_code": result[0] if result else o_Numero,
-            "message": result[1] if result else o_Mensaje
-        }
-
     def update_task(self, task: TaskUpdate):
-        conn = get_connection()
-        cursor = conn.cursor()
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_GENERAL].[USP_Tasks]
                 @i_taskId = ?,
                 @i_taskSummary = ?,
@@ -79,9 +68,13 @@ class TasksRepository:
                 @i_taskModificatorId = ?,
                 @i_taskStatus = ?,
                 @w_Accion = 'U',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
+
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_operation(query, (
             task.taskId,
             task.taskSummary,
             task.taskDescription,
@@ -95,40 +88,22 @@ class TasksRepository:
             task.taskDueDate,
             task.taskActivityType,
             task.taskModificatorId,
-            task.taskStatus,
-            o_Numero,
-            o_Mensaje
+            task.taskStatus
         ))
 
-        result = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
+    def list_tasks(self, page_number: int = 1, rows_per_page: int = 10):
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        return {
-            "status_code": result[0] if result else o_Numero,
-            "message": result[1] if result else o_Mensaje
-        }
-
-    def list_tasks(self):
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_GENERAL].[USP_Tasks]
+                @i_PageNumber = ?,
+                @i_RowsPerPage = ?,
                 @w_Accion = 'S',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (o_Numero, o_Mensaje))
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
 
-        columns = [col[0] for col in cursor.description]
-        data = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return {"status_code": o_Numero, "message": o_Mensaje, "data": data}
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_query(query, (page_number, rows_per_page))

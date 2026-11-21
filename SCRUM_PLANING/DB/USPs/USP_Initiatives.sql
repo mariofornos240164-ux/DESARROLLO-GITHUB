@@ -45,7 +45,7 @@ BEGIN
                 ELSE NULL
             END;
 
-        IF @o_Numero = 400
+        IF @o_MensajeUsuario IS NOT NULL
         BEGIN
             RETURN;
         END
