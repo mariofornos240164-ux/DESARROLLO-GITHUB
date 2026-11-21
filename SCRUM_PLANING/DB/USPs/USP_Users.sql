@@ -23,34 +23,36 @@ CREATE OR ALTER PROC [SQM_SECURITY].[USP_Users]
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
 
     DECLARE @w_userPasswordEncrypted VARBINARY(256), @w_totalRows INT;
 
     IF @i_userCreationDate IS NULL
         SET @i_userCreationDate = GETDATE();
 
-    IF @i_userEnable IS NULL
-        SET @i_userEnable = 1;
-
     -- INSERTAR USER --
     IF @w_Accion = 'I'
     BEGIN
-        SELECT 
-            @o_Numero = 400,
-            @o_MensajeUsuario = CASE 
-                WHEN ISNULL(@i_userFullName,'') = '' THEN 'EL NOMBRE COMPLETO ES OBLIGATORIO'
-                WHEN ISNULL(@i_userName,'') = '' THEN 'EL NOMBRE DE USUARIO ES OBLIGATORIO'
-                WHEN ISNULL(@i_userEmail,'') = '' THEN 'EL CORREO ELECTRONICO ES OBLIGATORIO'
-                WHEN ISNULL(@i_userPassword,'') = '' THEN 'LA CONTRASEÑA ES OBLIGATORIA'
-                ELSE NULL
-            END;
+        IF @i_userEnable IS NULL
+            SET @i_userEnable = 1;
 
-        IF @o_Numero = 400
+        SET @o_MensajeUsuario = CASE
+            WHEN ISNULL(@i_userFullName,'') = '' THEN 'EL NOMBRE COMPLETO ES OBLIGATORIO'
+            WHEN ISNULL(@i_userName,'') = '' THEN 'EL NOMBRE DE USUARIO ES OBLIGATORIO'
+            WHEN ISNULL(@i_userEmail,'') = '' THEN 'EL CORREO ELECTRONICO ES OBLIGATORIO'
+            WHEN ISNULL(@i_userPassword,'') = '' THEN 'LA CONTRASEÑA ES OBLIGATORIA'
+            WHEN @i_userRolId IS NULL THEN 'EL ROL ES OBLIGATORIO'
+            WHEN @i_userCreatorId IS NULL THEN 'EL ID DEL CREADOR ES OBLIGATORIO'
+            ELSE NULL
+        END;
+
+        IF @o_MensajeUsuario IS NOT NULL
         BEGIN
+            SET @o_Numero = 400;
             RETURN;
         END
 
-        ELSE IF EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Users] (NOLOCK) WHERE userName = @i_userName)
+        IF EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Users] (NOLOCK) WHERE userName = @i_userName)
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL NOMBRE DE USUARIO YA EXISTE';
@@ -62,17 +64,17 @@ BEGIN
             SET @o_MensajeUsuario = 'EL CORREO YA EXISTE';
         END;
 
-        ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Roles] (NOLOCK) WHERE rolId = @i_userRolId AND rolEnable = 1)
+        ELSE IF NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolId = @i_userRolId AND rolEnable = 1)
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL ROL NO EXISTE';
         END;
-        
+
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_INS_USER;
-
             BEGIN TRY
+
+                BEGIN TRANSACTION TRX_INS_USER;
 
                 OPEN SYMMETRIC KEY KEY_HASH
                 DECRYPTION BY CERTIFICATE CERT_SCRUMPLANNING;
@@ -81,8 +83,8 @@ BEGIN
 
                 CLOSE SYMMETRIC KEY KEY_HASH;
 
-                INSERT INTO [SQM_SECURITY].[TBL_Users](userFullName,userName,userEmail,userPassword,userRolId,userCreationDate,userCreatorId,userEnable)
-                VALUES(@i_userFullName,@i_userName,@i_userEmail,@w_userPasswordEncrypted,@i_userRolId,@i_userCreationDate,@i_userCreatorId,@i_userEnable);
+                INSERT INTO [SQM_SECURITY].[TBL_Users](userFullName,userName,userEmail,userPassword,userRolId,userCreationDate,userCreatorId,userModificationDate,userEnable)
+                VALUES(@i_userFullName,@i_userName,@i_userEmail,@w_userPasswordEncrypted,@i_userRolId,@i_userCreationDate,@i_userCreatorId,@i_userCreationDate,@i_userEnable);
 
                 COMMIT TRANSACTION TRX_INS_USER;
 
@@ -93,7 +95,8 @@ BEGIN
 
             BEGIN CATCH
 
-                ROLLBACK TRANSACTION TRX_INS_USER;
+                IF @@TRANCOUNT > 0
+                    ROLLBACK TRANSACTION TRX_INS_USER;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL REGISTRAR USUARIO';
@@ -138,17 +141,17 @@ BEGIN
             SET @o_MensajeUsuario = 'EL CORREO YA EXISTE';
         END;
 
-        ELSE IF @i_userRolId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Roles] (NOLOCK) WHERE rolId = @i_userRolId AND rolEnable = 1)
+        ELSE IF @i_userRolId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) WHERE rolId = @i_userRolId AND rolEnable = 1)
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL ROL NO EXISTE';
         END;
-        
+
         ELSE
         BEGIN
-            BEGIN TRANSACTION TRX_UPD_USER;
-
             BEGIN TRY
+
+                BEGIN TRANSACTION TRX_UPD_USER;
 
                 IF @i_userPassword IS NOT NULL
                 BEGIN
@@ -180,7 +183,8 @@ BEGIN
             END TRY
 
             BEGIN CATCH
-                ROLLBACK TRANSACTION TRX_UPD_USER;
+                IF @@TRANCOUNT > 0
+                    ROLLBACK TRANSACTION TRX_UPD_USER;
 
                 SET @o_Numero = 500;
                 SET @o_MensajeUsuario = 'ERROR AL ACTUALIZAR USUARIO';
@@ -193,9 +197,15 @@ BEGIN
     -- SELECT USER --
     ELSE IF @w_Accion = 'S'
     BEGIN
+        IF ISNULL(@i_PageNumber,0) < 1
+            SET @i_PageNumber = 1;
+
+        IF ISNULL(@i_RowsPerPage,0) < 1
+            SET @i_RowsPerPage = 10;
+
         BEGIN TRY
-            SELECT 
-                userId, 
+            SELECT
+                userId,
                 userFullName,
                 userName,
                 userEmail,
@@ -228,6 +238,47 @@ BEGIN
             SET @o_Numero = 500;
             SET @o_MensajeUsuario = 'ERROR AL LISTAR LOS USUARIOS';
             SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL LISTAR USUARIOS', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
+        END CATCH
+    END
+
+    -- AUTENTICAR USER (LOGIN) --
+    ELSE IF @w_Accion = 'A'
+    BEGIN
+        BEGIN TRY
+            OPEN SYMMETRIC KEY KEY_HASH
+            DECRYPTION BY CERTIFICATE CERT_SCRUMPLANNING;
+
+            -- Se compara como VARBINARY para que la contraseña distinga mayusculas y minusculas
+            SELECT
+                userId,
+                userName,
+                userFullName,
+                userRolId
+            FROM [SQM_SECURITY].[TBL_Users] (NOLOCK)
+            WHERE userName = @i_userName
+              AND userEnable = 1
+              AND CONVERT(VARBINARY(256), [SQM_SECURITY].[Fn_DecryptByKey](userPassword)) = CONVERT(VARBINARY(256), @i_userPassword);
+
+            SET @w_totalRows = @@ROWCOUNT
+
+            CLOSE SYMMETRIC KEY KEY_HASH;
+
+            IF (@w_totalRows > 0)
+            BEGIN
+                SET @o_Numero = 200;
+                SET @o_MensajeUsuario = 'AUTENTICACION EXITOSA';
+            END
+            ELSE
+            BEGIN
+                SET @o_Numero = 401;
+                SET @o_MensajeUsuario = 'USUARIO O CONTRASEÑA INCORRECTOS';
+            END
+        END TRY
+
+        BEGIN CATCH
+            SET @o_Numero = 500;
+            SET @o_MensajeUsuario = 'ERROR AL AUTENTICAR';
+            SET @o_MensajeTecnico = CONCAT_WS(' - ', 'ERROR AL AUTENTICAR', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
         END CATCH
     END
 

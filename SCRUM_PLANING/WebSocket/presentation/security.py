@@ -11,13 +11,13 @@ from jwt import InvalidTokenError
 bearer_scheme = HTTPBearer(auto_error=False)
 AUTH_CONFIG_ERROR = "La autenticación no está configurada correctamente."
 
-# SOLO PRUEBAS: reemplazar estos valores antes de desplegar en producción.
-TEST_JWT_SECRET = "DEV_ONLY_REPLACE_BEFORE_PRODUCTION_32_CHARS_MINIMUM"
-TEST_ADMIN_ROLE_ID = 1
+DEFAULT_ADMIN_ROLE_ID = 1
 
 
 def _jwt_secret() -> str:
-    secret = os.getenv("JWT_SECRET_KEY", TEST_JWT_SECRET)
+    # Sin valor por defecto a propósito: si falta JWT_SECRET_KEY en el .env,
+    # la API se niega a emitir o aceptar tokens en vez de usar una clave pública.
+    secret = os.getenv("JWT_SECRET_KEY", "")
     if not secret or len(secret) < 32:
         raise HTTPException(
             status_code=503,
@@ -87,7 +87,7 @@ def get_admin_user(
     current_user: Annotated[dict[str, int | str], Depends(get_current_user)]
 ) -> dict[str, int | str]:
     try:
-        admin_role_id = int(os.getenv("JWT_ADMIN_ROLE_ID", str(TEST_ADMIN_ROLE_ID)))
+        admin_role_id = int(os.getenv("JWT_ADMIN_ROLE_ID", str(DEFAULT_ADMIN_ROLE_ID)))
     except ValueError as exc:
         raise HTTPException(
             status_code=503,

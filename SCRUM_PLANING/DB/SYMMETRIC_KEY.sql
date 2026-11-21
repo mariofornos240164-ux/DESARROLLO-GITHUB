@@ -9,7 +9,7 @@ GO
 --------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##')
 BEGIN
-    CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'SCRUM_PLANNING2026!';
+    CREATE MASTER KEY ENCRYPTION BY PASSWORD = '<PON_AQUI_UNA_CLAVE_NUEVA_Y_NO_LA_SUBAS>';
 END
 
 --------------------------------------

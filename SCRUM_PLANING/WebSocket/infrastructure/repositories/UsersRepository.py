@@ -1,104 +1,101 @@
+from infrastructure.database.base_repository import BaseRepository
+from domain.interfaces.IusersRepository import IUserRepository
+from domain.entities.UserModels import UserCreate, UserLogin, UserUpdate
 
-from infrastructure.database.connection import get_connection
-from domain.entities.UserModels import UserCreate,UserUpdate
+# pyodbc no puede leer parametros OUTPUT con "?".
+# Por eso se declaran las variables en el mismo query y al final se hace un SELECT con ellas.
 
-class UserRepository:
-    def insert_user(self, user: UserCreate):
-        conn = get_connection()
-        cursor = conn.cursor()
+class UserRepository(IUserRepository):
+    def insert_user(self, user: UserCreate, creator_id: int):
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_SECURITY].[USP_Users]
                 @i_userFullName = ?,
                 @i_userName = ?,
+                @i_userEmail = ?,
                 @i_userPassword = ?,
                 @i_userRolId = ?,
                 @i_userCreatorId = ?,
                 @w_Accion = 'I',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
+
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_operation(query, (
             user.userFullName,
             user.userName,
+            user.userEmail,
             user.userPassword,
             user.userRolId,
-            user.userCreatorId,
-            o_Numero,
-            o_Mensaje
+            creator_id
         ))
 
-        result = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
+    def update_user(self, user: UserUpdate, modificator_id: int):
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        return {"status_code": result[0] if result else o_Numero,
-                "message": result[1] if result else o_Mensaje}
-
-    def update_user(self, user: UserUpdate):
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_SECURITY].[USP_Users]
                 @i_userId = ?,
                 @i_userFullName = ?,
                 @i_userName = ?,
+                @i_userEmail = ?,
                 @i_userPassword = ?,
                 @i_userRolId = ?,
-                @i_userModificatorId = NULL,
                 @i_userEnable = ?,
+                @i_userModificatorId = ?,
                 @w_Accion = 'U',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
+
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_operation(query, (
             user.userId,
             user.userFullName,
             user.userName,
+            user.userEmail,
             user.userPassword,
             user.userRolId,
             user.userEnable,
-            user.userModificatorId,
-            o_Numero,
-            o_Mensaje
+            modificator_id
         ))
 
-        result = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
+    def list_users(self, page_number: int, rows_per_page: int):
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        return {"status_code": result[0] if result else o_Numero,
-                "message": result[1] if result else o_Mensaje}
-
-    def list_users(self):
-        """
-        Lista todos los usuarios (Acción 'S').
-        """
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        o_Numero = 0
-        o_Mensaje = ""
-
-        cursor.execute("""
             EXEC [SQM_SECURITY].[USP_Users]
+                @i_PageNumber = ?,
+                @i_RowsPerPage = ?,
                 @w_Accion = 'S',
-                @o_Numero = ? OUTPUT,
-                @o_Mensaje = ? OUTPUT
-        """, (o_Numero, o_Mensaje))
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
 
-        columns = [col[0] for col in cursor.description]
-        data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_query(query, (page_number, rows_per_page))
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+    def authenticate_user(self, user: UserLogin):
+        query = """
+            SET NOCOUNT ON;
+            DECLARE @o_Numero INT, @o_MensajeUsuario VARCHAR(500), @o_MensajeTecnico VARCHAR(500);
 
-        return {"status_code": o_Numero, "message": o_Mensaje, "data": data}
+            EXEC [SQM_SECURITY].[USP_Users]
+                @i_userName = ?,
+                @i_userPassword = ?,
+                @w_Accion = 'A',
+                @o_Numero = @o_Numero OUTPUT,
+                @o_MensajeUsuario = @o_MensajeUsuario OUTPUT,
+                @o_MensajeTecnico = @o_MensajeTecnico OUTPUT;
+
+            SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico;
+        """
+        return BaseRepository.execute_query(query, (user.userName, user.userPassword))

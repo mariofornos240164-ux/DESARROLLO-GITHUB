@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 class BaseRepository:
     #Metodo para ejecutar POST (INSERT) o PUT (UPDATE)
+    #El query debe terminar con: SELECT @o_Numero, @o_MensajeUsuario, @o_MensajeTecnico
     @staticmethod
     def execute_operation(query: str, params: tuple = ()) -> OperationResult:
         try:
@@ -26,7 +27,7 @@ class BaseRepository:
 
                 return OperationResult(
                     status_code=result[0],
-                    message_user=result[1],
+                    message_user=result[1] or "",
                     message_tech=result[2]
                 )
 
@@ -37,8 +38,9 @@ class BaseRepository:
                 message_user="No fue posible completar la operación.",
                 message_tech=None
             )
-        
+
     #Metodo para ejecutar GET (SELECT)
+    #Primero se leen los datos y luego el SELECT con los parametros de salida
     @staticmethod
     def execute_query(
         query: str,
@@ -59,7 +61,7 @@ class BaseRepository:
                     operation = cursor.fetchone()
                     return QueryResult(
                         status_code=operation[0],
-                        message_user=operation[1],
+                        message_user=operation[1] or "",
                         message_tech=operation[2],
                         data=data
                     )
