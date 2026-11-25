@@ -1,12 +1,14 @@
-import type { AuthSession } from "../../domain/auth";
+import type { LoginUseCase } from "../../application/auth/LoginUseCase";
+import type { AuthSession } from "../../domain/auth/entities";
 import { BrandLogo } from "./BrandLogo";
 import { LoginForm } from "./LoginForm";
 
 interface LoginPageProps {
+  loginUseCase: LoginUseCase;
   onAuthenticated: (session: AuthSession) => void;
 }
 
-export function LoginPage({ onAuthenticated }: LoginPageProps) {
+export function LoginPage({ loginUseCase, onAuthenticated }: LoginPageProps) {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 px-4 py-10 sm:px-6">
       <div className="w-full max-w-md">
@@ -25,7 +27,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             </p>
           </header>
 
-          <LoginForm onAuthenticated={onAuthenticated} />
+          <LoginForm loginUseCase={loginUseCase} onAuthenticated={onAuthenticated} />
         </section>
 
         <p className="mt-6 text-center text-xs text-slate-400">

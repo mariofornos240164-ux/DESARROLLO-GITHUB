@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { toast } from "sonner";
-import { useLoginForm } from "../../application/useLoginForm";
-import type { AuthSession } from "../../domain/auth";
+import type { LoginUseCase } from "../../application/auth/LoginUseCase";
+import type { AuthSession } from "../../domain/auth/entities";
+import { useLoginForm } from "./useLoginForm";
 
 interface LoginFormProps {
+  loginUseCase: LoginUseCase;
   onAuthenticated: (session: AuthSession) => void;
 }
 
@@ -13,7 +15,7 @@ const baseInputClass =
 const validInputClass = "border-slate-300 focus:border-sky-500 focus:ring-sky-500/30";
 const invalidInputClass = "border-red-500 focus:border-red-500 focus:ring-red-500";
 
-export function LoginForm({ onAuthenticated }: LoginFormProps) {
+export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
   const {
     values,
     errors,
@@ -22,7 +24,7 @@ export function LoginForm({ onAuthenticated }: LoginFormProps) {
     setRememberSession,
     handleBlur,
     handleSubmit,
-  } = useLoginForm(onAuthenticated);
+  } = useLoginForm(loginUseCase, onAuthenticated);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleForgotPassword = () => {

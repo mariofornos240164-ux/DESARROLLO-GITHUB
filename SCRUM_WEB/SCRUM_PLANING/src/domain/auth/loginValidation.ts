@@ -1,10 +1,16 @@
-import type { LoginField, LoginFormErrors, LoginFormValues } from "../domain/auth";
+import type { Credentials } from "./entities";
 
-// Lógica de validación pura: no depende de React ni de la vista,
-// así que se puede reutilizar y probar por separado.
+// Reglas de validación puras del dominio: sin React ni efectos secundarios,
+// así que se pueden reutilizar en cualquier capa y probar por separado.
+
+/** Campos de las credenciales que se validan. */
+export type CredentialField = keyof Credentials;
+
+/** Mensaje de error por campo; `undefined` significa que el campo es válido. */
+export type CredentialErrors = Partial<Record<CredentialField, string>>;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const MIN_USERNAME_LENGTH = 3;
+export const MIN_USERNAME_LENGTH = 3;
 export const MIN_PASSWORD_LENGTH = 6;
 
 export function validateIdentifier(value: string): string | undefined {
@@ -43,19 +49,19 @@ export function validatePassword(value: string): string | undefined {
   return undefined;
 }
 
-export function validateLoginField(
-  field: LoginField,
-  values: LoginFormValues,
+export function validateCredentialField(
+  field: CredentialField,
+  credentials: Credentials,
 ): string | undefined {
   return field === "identifier"
-    ? validateIdentifier(values.identifier)
-    : validatePassword(values.password);
+    ? validateIdentifier(credentials.identifier)
+    : validatePassword(credentials.password);
 }
 
-export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
-  const errors: LoginFormErrors = {};
-  const identifierError = validateIdentifier(values.identifier);
-  const passwordError = validatePassword(values.password);
+export function validateCredentials(credentials: Credentials): CredentialErrors {
+  const errors: CredentialErrors = {};
+  const identifierError = validateIdentifier(credentials.identifier);
+  const passwordError = validatePassword(credentials.password);
 
   if (identifierError) errors.identifier = identifierError;
   if (passwordError) errors.password = passwordError;
@@ -63,6 +69,6 @@ export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
   return errors;
 }
 
-export function hasErrors(errors: LoginFormErrors): boolean {
+export function hasErrors(errors: CredentialErrors): boolean {
   return Object.values(errors).some(Boolean);
 }
