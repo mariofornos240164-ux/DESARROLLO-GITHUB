@@ -1,3 +1,23 @@
+# SCRUM PLANNING - Frontend
+
+## Cómo arrancarlo
+
+```
+cd SCRUM_WEB/SCRUM_PLANING
+npm run dev
+```
+
+`npm run dev` primero ejecuta `npm install` solo, así que si alguien agregó
+una librería nueva (por ejemplo `sonner`), se instala sola antes de abrir la app.
+
+Si aparece un error como **"Failed to resolve import 'sonner'"** (o cualquier
+otra librería), significa que faltan librerías: ejecuta `npm install` y vuelve
+a ejecutar `npm run dev`.
+
+Copia `.env.example` como `.env` para indicar la dirección del backend.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
