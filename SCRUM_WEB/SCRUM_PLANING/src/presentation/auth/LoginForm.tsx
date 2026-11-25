@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
-import { toast } from "sonner";
 import type { LoginUseCase } from "../../application/auth/LoginUseCase";
 import type { AuthSession } from "../../domain/auth/entities";
 import { useLoginForm } from "./useLoginForm";
@@ -20,6 +19,8 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
     values,
     errors,
     isSubmitting,
+    message,
+    setMessage,
     setFieldValue,
     setRememberSession,
     handleBlur,
@@ -29,7 +30,7 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
 
   const handleForgotPassword = () => {
     // Todavía no existe la ruta de recuperación de contraseña.
-    toast.info("La recuperación de contraseña estará disponible próximamente");
+    setMessage({ type: "info", text: "La recuperación de contraseña estará disponible próximamente" });
   };
 
   return (
@@ -132,6 +133,19 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
           ¿Olvidaste tu contraseña?
         </button>
       </div>
+
+      {message && (
+        <p
+          role={message.type === "error" ? "alert" : "status"}
+          className={`rounded-lg border px-3 py-2 text-sm ${
+            message.type === "error"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-sky-200 bg-sky-50 text-sky-800"
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
 
       <button
         type="submit"

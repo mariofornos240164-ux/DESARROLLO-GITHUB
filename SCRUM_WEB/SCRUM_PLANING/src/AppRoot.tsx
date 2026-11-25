@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Toaster } from "sonner";
 import App from "./App.tsx";
 import type { AuthSession } from "./domain/auth/entities";
 import { authUseCases } from "./infrastructure/auth/authContainer";
@@ -16,14 +15,9 @@ export default function AppRoot() {
     setSession(null);
   };
 
-  return (
-    <>
-      {session ? (
-        <App userName={session.user.userName} onLogout={handleLogout} />
-      ) : (
-        <LoginPage loginUseCase={authUseCases.login} onAuthenticated={setSession} />
-      )}
-      <Toaster position="top-right" richColors />
-    </>
+  return session ? (
+    <App userName={session.user.userName} onLogout={handleLogout} />
+  ) : (
+    <LoginPage loginUseCase={authUseCases.login} onAuthenticated={setSession} />
   );
 }
