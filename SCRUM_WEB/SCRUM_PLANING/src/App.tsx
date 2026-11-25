@@ -6,7 +6,12 @@ import { NewWorkItemForm } from "./presentation/NewWorkItemForm";
 import { SprintBoardView } from "./presentation/SprintBoardView";
 import { WorkItemsTable } from "./presentation/WorkItemsTable";
 
-export default function App() {
+interface AppProps {
+  userName?: string;
+  onLogout?: () => void;
+}
+
+export default function App({ userName, onLogout }: AppProps) {
   const {
     activeSection,
     setActiveSection,
@@ -59,6 +64,19 @@ export default function App() {
           placeholder="Search work items..."
           className="w-64 rounded border border-gray-300 bg-gray-50 px-3 py-1 text-xs focus:border-blue-500 focus:bg-white focus:outline-none"
         />
+
+        {onLogout && (
+          <div className="flex items-center gap-3 text-xs text-gray-600">
+            {userName && <span>{userName}</span>}
+            <button
+              type="button"
+              onClick={onLogout}
+              className="cursor-pointer text-blue-600 hover:underline"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
