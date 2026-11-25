@@ -11,6 +11,7 @@ export interface CreateWorkItemInput {
   type: WorkItemType;
   state: WorkItemState;
   parentId?: number | null;
+  level?: number;
 }
 
 export const fetchWorkItems = async (): Promise<WorkItem[]> => {
