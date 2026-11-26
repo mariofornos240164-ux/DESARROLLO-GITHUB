@@ -10,6 +10,7 @@ from application.use_cases.usersUseCase import UserUseCase
 from domain.entities.UserModels import UserCreate, UserLogin, UserUpdate
 
 from infrastructure.repositories.UsersRepository import UserRepository
+from infrastructure.repositories.RolesRepository import RolRepository
 from presentation.security import create_access_token, get_admin_user
 
 from presentation.generic_states import (
@@ -31,10 +32,17 @@ def get_user_use_case() -> UserUseCase:
         UserRepository()
     )
 
+def get_role_repository() -> RolRepository:
+    return RolRepository()
+
 
 UserUseCaseDep = Annotated[
     UserUseCase,
     Depends(get_user_use_case)
+]
+RoleRepositoryDep = Annotated[
+    RolRepository,
+    Depends(get_role_repository)
 ]
 AdminUserDep = Annotated[dict[str, int | str], Depends(get_admin_user)]
 
@@ -127,6 +135,27 @@ def list_users(
 ):
 
     result = use_case.list_users(
+        page_number=page_number,
+        rows_per_page=rows_per_page
+    )
+    if result.status_code >= 400:
+        raise HTTPException(
+            status_code=result.status_code,
+            detail=result.message_user
+        )
+    return result
+
+@router.get(
+    "/roles",
+    response_model=QueryResponse
+)
+def list_roles(
+    repository: RoleRepositoryDep,
+    admin_user: AdminUserDep,
+    page_number: Annotated[int, Query(ge=1)] = 1,
+    rows_per_page: Annotated[int, Query(ge=1, le=100)] = 100
+):
+    result = repository.list_roles(
         page_number=page_number,
         rows_per_page=rows_per_page
     )

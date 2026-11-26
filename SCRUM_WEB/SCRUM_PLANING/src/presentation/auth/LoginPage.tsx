@@ -3,20 +3,28 @@ import type { AuthSession } from "../../domain/auth/entities";
 import type { CredentialValidationMessages } from "../../domain/auth/loginValidation";
 import { BrandLogo } from "./BrandLogo";
 import { LoginForm } from "./LoginForm";
+import { ThemeToggle } from "../ThemeToggle";
 
 interface LoginPageProps {
   loginUseCase: LoginUseCase;
   onAuthenticated: (session: AuthSession) => void;
   validationMessages?: CredentialValidationMessages;
+  isDarkMode: boolean;
+  onToggleTheme: () => void;
 }
 
 export function LoginPage({
   loginUseCase,
   onAuthenticated,
   validationMessages,
+  isDarkMode,
+  onToggleTheme,
 }: LoginPageProps) {
   return (
-    <main className="min-h-screen w-full bg-linear-to-br from-sky-200/80 via-white to-blue-200/80 px-5 py-10 sm:px-8 lg:px-12">
+    <main className="login-screen relative min-h-screen w-full bg-linear-to-br from-sky-200/80 via-white to-blue-200/80 px-5 py-10 sm:px-8 lg:px-12">
+      <div className="absolute right-5 top-5 z-10 sm:right-8 lg:right-12">
+        <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
+      </div>
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center gap-12 lg:grid-cols-[1fr_0.85fr] lg:gap-20">
         <section className="mx-auto w-full max-w-xl lg:mx-0">
           <BrandLogo className="mb-8" />

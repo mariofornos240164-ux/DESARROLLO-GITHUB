@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
 
@@ -16,11 +16,11 @@ class UserBase(BaseModel):
 
 
 class UserCreate(BaseModel):
-    userFullName: str
-    userName: str
-    userEmail: str
-    userPassword: str
-    userRolId: int
+    userFullName: str = Field(min_length=1, max_length=80)
+    userName: str = Field(min_length=1, max_length=80)
+    userEmail: str = Field(min_length=1, max_length=80)
+    userPassword: str = Field(min_length=1, max_length=256)
+    userRolId: int = Field(gt=0)
 
 class UserUpdate(BaseModel):
     userId: int

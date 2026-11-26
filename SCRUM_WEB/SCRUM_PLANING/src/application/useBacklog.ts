@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  type ActiveSection,
   type BacklogLevelFilter,
   getVisibleBacklogItems,
   type Sprint,
@@ -12,30 +11,51 @@ import {
   type CreateWorkItemInput,
   deleteWorkItem,
   fetchSprints,
+  fetchWorkItemParents,
   fetchWorkItems,
   toggleWorkItemInSprint,
 } from "../infrastructure/backlogApi";
 
+function errorMessage(error: Error): string {
+  return error.message || "No se pudo completar la operación.";
+}
+
 export function useBacklog() {
   const queryClient = useQueryClient();
 
-  const [activeSection, setActiveSection] = useState<ActiveSection>("Backlogs");
   const [selectedLevel, setSelectedLevel] = useState<BacklogLevelFilter>("All");
   const [search, setSearch] = useState("");
-  const [collapsedIds, setCollapsedIds] = useState<Set<number>>(
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(
     () => new Set(),
   );
   const [isCreating, setIsCreating] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<WorkItem | null>(null);
   const [selectedSprintId, setSelectedSprintId] = useState<number>(1);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!mutationError) return;
+    const timeoutId = window.setTimeout(() => setMutationError(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [mutationError]);
 
   const {
     data: items = [],
     isLoading,
     isError,
+    error: itemsError,
   } = useQuery({
     queryKey: ["work-items"],
     queryFn: fetchWorkItems,
+  });
+
+  const {
+    data: parentOptions,
+    isLoading: isParentOptionsLoading,
+    error: parentOptionsError,
+  } = useQuery({
+    queryKey: ["work-item-parents"],
+    queryFn: fetchWorkItemParents,
   });
 
   const { data: sprints = [] } = useQuery({
@@ -45,25 +65,29 @@ export function useBacklog() {
 
   const createMutation = useMutation({
     mutationFn: (input: CreateWorkItemInput) => createWorkItem(input),
-    onSuccess: (createdItem) => {
-      queryClient.setQueryData<WorkItem[]>(["work-items"], (old = []) => {
-        if (old.some((item) => item.id === createdItem.id)) {
-          return old;
-        }
-        return [...old, createdItem];
-      });
+    onMutate: () => setMutationError(null),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["work-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["work-item-parents"] }),
+      ]);
       setIsCreating(false);
     },
+    onError: (error) => setMutationError(errorMessage(error)),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteWorkItem(id),
-    onSuccess: (deletedId) => {
-      queryClient.setQueryData<WorkItem[]>(["work-items"], (old = []) =>
-        old.filter((item) => item.id !== deletedId),
-      );
+    mutationFn: (id: string) => deleteWorkItem(id),
+    onMutate: () => setMutationError(null),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["work-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["work-item-parents"] }),
+        queryClient.invalidateQueries({ queryKey: ["sprints"] }),
+      ]);
       setItemToDelete(null);
     },
+    onError: (error) => setMutationError(errorMessage(error)),
   });
 
   const sprintToggleMutation = useMutation({
@@ -72,7 +96,7 @@ export function useBacklog() {
       workItemId,
     }: {
       sprintId: number;
-      workItemId: number;
+      workItemId: string;
     }) => toggleWorkItemInSprint(sprintId, workItemId),
     onSuccess: (updatedSprints) => {
       queryClient.setQueryData<Sprint[]>(["sprints"], updatedSprints);
@@ -92,7 +116,7 @@ export function useBacklog() {
     deleteMutation.mutate(itemToDelete.id);
   };
 
-  const toggleCollapse = (id: number) => {
+  const toggleCollapse = (id: string) => {
     setCollapsedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -138,12 +162,12 @@ export function useBacklog() {
   }, [items, activeSprint]);
 
   return {
-    activeSection,
-    setActiveSection,
     visibleItems,
     flatItems,
     isLoading,
     isError,
+    loadError:
+      itemsError instanceof Error ? itemsError.message : "Error al cargar el backlog.",
     search,
     setSearch,
     selectedLevel,
@@ -154,6 +178,16 @@ export function useBacklog() {
     setIsCreating,
     createWorkItem: createMutation.mutate,
     isCreatingPending: createMutation.isPending,
+    parentOptions: parentOptions ?? {
+      Epic: [],
+      Feature: [],
+      Story: [],
+      Task: [],
+    },
+    isParentOptionsLoading,
+    parentOptionsError:
+      parentOptionsError instanceof Error ? parentOptionsError.message : null,
+    mutationError,
     itemToDelete,
     requestDeleteItem,
     cancelDeleteItem,
@@ -165,7 +199,7 @@ export function useBacklog() {
     setSelectedSprintId,
     sprintItems,
     availableForSprint,
-    toggleItemInSprint: (workItemId: number) => {
+    toggleItemInSprint: (workItemId: string) => {
       if (!activeSprint) return;
       sprintToggleMutation.mutate({ sprintId: activeSprint.id, workItemId });
     },

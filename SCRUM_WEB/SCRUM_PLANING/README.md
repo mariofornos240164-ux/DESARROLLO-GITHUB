@@ -15,6 +15,10 @@ otra librería), significa que faltan librerías: ejecuta `npm install` y vuelve
 a ejecutar `npm run dev`.
 
 Copia `.env.example` como `.env` para indicar la dirección del backend.
+La autenticación usa la API por defecto (`VITE_AUTH_MODE=api`) en
+`http://localhost:8000`; el modo `mock` solo sirve para pruebas sin backend.
+Consulta `../../SCRUM_PLANING/WebSocket/README.md` para preparar SQL Server y
+arrancar el backend con la cuenta de prueba.
 
 ---
 

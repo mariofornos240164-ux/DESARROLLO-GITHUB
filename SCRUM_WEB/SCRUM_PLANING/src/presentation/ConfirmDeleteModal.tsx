@@ -5,6 +5,7 @@ interface ConfirmDeleteModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   isDeleting: boolean;
+  error?: string | null;
 }
 
 export function ConfirmDeleteModal({
@@ -12,6 +13,7 @@ export function ConfirmDeleteModal({
   onConfirm,
   onCancel,
   isDeleting,
+  error,
 }: ConfirmDeleteModalProps) {
   if (!item) return null;
 
@@ -28,6 +30,15 @@ export function ConfirmDeleteModal({
           </span>
           ? Esta acción no se puede deshacer.
         </p>
+
+        {error && (
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-red-700"
+          >
+            {error}
+          </p>
+        )}
 
         <div className="flex justify-end gap-2">
           <button

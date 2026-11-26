@@ -25,8 +25,8 @@ interface SprintBoardViewProps {
   onSelectSprint: (sprintId: number) => void;
   sprintItems: WorkItem[];
   availableItems: WorkItem[];
-  onAddItemToSprint: (workItemId: number) => void;
-  onRemoveItemFromSprint: (workItemId: number) => void;
+  onAddItemToSprint: (workItemId: string) => void;
+  onRemoveItemFromSprint: (workItemId: string) => void;
   onRequestDelete: (item: WorkItem) => void;
 }
 
@@ -58,9 +58,8 @@ export function SprintBoardView({
     totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
 
   const handleAdd = () => {
-    const id = Number(selectedToAdd);
-    if (!id) return;
-    onAddItemToSprint(id);
+    if (!selectedToAdd) return;
+    onAddItemToSprint(selectedToAdd);
     setSelectedToAdd("");
   };
 
@@ -160,7 +159,7 @@ export function SprintBoardView({
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`h-2 w-2 rounded-full ${stateDot[item.state]}`}
+                        className={`h-2 w-2 rounded-full ${stateDot[item.state as WorkItemState] ?? "bg-slate-400"}`}
                       />
                       <span>{item.state}</span>
                     </div>

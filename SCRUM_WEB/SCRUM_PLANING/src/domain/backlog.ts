@@ -8,24 +8,37 @@ export interface Sprint {
   name: string;
   startDate: string;
   endDate: string;
-  workItemIds: number[];
+  workItemIds: string[];
 }
 
 export interface WorkItem {
-  id: number;
+  id: string;
   order: number;
   type: WorkItemType;
   title: string;
-  state: WorkItemState;
+  state: string;
   level: number;
+  parentId: string;
+  description: string;
+  acceptanceCriteria?: string | null;
   progress?: number;
   hasChildren?: boolean;
 }
 
+export interface WorkItemParentOption {
+  id: string;
+  title: string;
+}
+
+export type WorkItemParentOptions = Record<
+  WorkItemType,
+  WorkItemParentOption[]
+>;
+
 export function getVisibleBacklogItems(
   items: WorkItem[],
   options: {
-    collapsedIds: Set<number>;
+    collapsedIds: Set<string>;
     search: string;
     selectedLevel: BacklogLevelFilter;
   },
