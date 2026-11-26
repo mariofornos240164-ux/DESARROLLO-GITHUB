@@ -101,6 +101,16 @@ html.dark .text-amber-700 {
   color: #fcd34d !important;
 }
 
+/* Textos azules (elemento activo del menú, ubicación en la navbar, enlaces):
+   en oscuro se aclaran para que se lean sobre el fondo oscuro. */
+html.dark .text-sky-600,
+html.dark .text-sky-700,
+html.dark .text-sky-800,
+html.dark .hover\:text-sky-700:hover,
+html.dark .hover\:text-sky-800:hover {
+  color: #7dd3fc !important;
+}
+
 html.dark input:not([type="checkbox"]),
 html.dark textarea,
 html.dark select {

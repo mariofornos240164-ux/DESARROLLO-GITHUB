@@ -25,10 +25,16 @@ export async function httpRequest<T>(
     headers.set("Authorization", `Bearer ${session.accessToken}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    // El navegador solo dice "Failed to fetch": el backend no responde.
+    throw new Error("No se pudo conectar con el servidor. Verifica que el backend esté encendido.");
+  }
 
   if (response.status === 401 && session) {
     // El token venció: se cierra la sesión y la app vuelve al login.

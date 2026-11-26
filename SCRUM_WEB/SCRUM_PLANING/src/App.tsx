@@ -171,9 +171,13 @@ export default function App({
       ? visibleItems
       : flatItems;
 
+  // En pantallas pequeñas el sidebar se abre y cierra con el botón de menú.
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const handleNavigate = (path: string) => {
     setIsCreating(false);
     setIsBoardMode(false);
+    setIsMenuOpen(false);
     navigate(path);
   };
 
@@ -181,6 +185,22 @@ export default function App({
     <div className="app-shell flex min-h-screen w-full min-w-0 flex-col bg-linear-to-br from-sky-50 via-white to-blue-50 text-sm text-slate-700">
       <header className="sticky top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-sky-100 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-expanded={isMenuOpen}
+            aria-controls="sidebar-principal"
+            aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-sky-100 bg-white text-slate-700 transition hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40 lg:hidden"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {isMenuOpen ? (
+                <path d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-sky-600 to-blue-600 text-xs font-bold text-white shadow-md shadow-sky-600/20">
             SP
           </span>
@@ -198,7 +218,7 @@ export default function App({
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
           {!isUsersView && (
             <input
@@ -214,7 +234,7 @@ export default function App({
           {onLogout && (
             <div className="flex items-center gap-3 text-xs text-slate-600">
               {userName && (
-                <span className="max-w-40 truncate rounded-full bg-sky-50 px-3 py-2 font-medium text-sky-800">
+                <span className="max-w-40 shrink-0 truncate rounded-full bg-sky-50 px-3 py-2 font-medium text-sky-800">
                   {userName}
                 </span>
               )}
@@ -231,7 +251,10 @@ export default function App({
       </header>
 
       <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
-        <aside className="w-full min-w-0 border-b border-sky-100 bg-white/65 p-3 lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r lg:p-4">
+        <aside
+          id="sidebar-principal"
+          className={`${isMenuOpen ? "block" : "hidden"} w-full min-w-0 border-b border-sky-100 bg-white/65 p-3 lg:block lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r lg:p-4`}
+        >
           <div className="mb-4 flex items-center gap-2 px-2 py-1.5 font-semibold text-slate-900">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-sky-600 to-blue-600 text-xs text-white shadow-sm">
               DA
