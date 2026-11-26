@@ -1,20 +1,29 @@
-import { useState } from "react";
-import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, Info, Loader2, Lock, User, X } from "lucide-react";
 import type { LoginUseCase } from "../../application/auth/LoginUseCase";
 import type { AuthSession } from "../../domain/auth/entities";
+import {
+  type CredentialValidationMessages,
+  DEFAULT_CREDENTIAL_VALIDATION_MESSAGES,
+} from "../../domain/auth/loginValidation";
 import { useLoginForm } from "./useLoginForm";
 
 interface LoginFormProps {
   loginUseCase: LoginUseCase;
   onAuthenticated: (session: AuthSession) => void;
+  validationMessages?: CredentialValidationMessages;
 }
 
 const baseInputClass =
-  "block w-full rounded-lg border bg-white py-2.5 pl-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50";
+  "peer block w-full rounded-lg border bg-white pb-2.5 pl-10 pr-3 pt-5 text-sm text-slate-900 placeholder:text-transparent shadow-sm transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50";
 const validInputClass = "border-slate-300 focus:border-sky-500 focus:ring-sky-500/30";
 const invalidInputClass = "border-red-500 focus:border-red-500 focus:ring-red-500";
 
-export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
+export function LoginForm({
+  loginUseCase,
+  onAuthenticated,
+  validationMessages = DEFAULT_CREDENTIAL_VALIDATION_MESSAGES,
+}: LoginFormProps) {
   const {
     values,
     errors,
@@ -25,8 +34,14 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
     setRememberSession,
     handleBlur,
     handleSubmit,
-  } = useLoginForm(loginUseCase, onAuthenticated);
+  } = useLoginForm(loginUseCase, onAuthenticated, validationMessages);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (!message) return;
+    const timeoutId = window.setTimeout(() => setMessage(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [message, setMessage]);
 
   const handleForgotPassword = () => {
     // Todavía no existe la ruta de recuperación de contraseña.
@@ -36,9 +51,6 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="login-identifier" className="mb-1.5 block text-sm font-medium text-slate-700">
-          Correo electrónico o usuario
-        </label>
         <div className="relative">
           <User
             aria-hidden="true"
@@ -52,7 +64,7 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="usuario o correo@ejemplo.com"
+            placeholder=" "
             value={values.identifier}
             onChange={(e) => setFieldValue("identifier", e.target.value)}
             onBlur={() => handleBlur("identifier")}
@@ -61,6 +73,12 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
             aria-describedby={errors.identifier ? "login-identifier-error" : undefined}
             className={`${baseInputClass} pr-3 ${errors.identifier ? invalidInputClass : validInputClass}`}
           />
+          <label
+            htmlFor="login-identifier"
+            className="pointer-events-none absolute left-10 top-1 -translate-y-0 text-xs font-medium text-slate-500 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs peer-focus:font-medium peer-focus:text-sky-700"
+          >
+            Correo electrónico o usuario
+          </label>
         </div>
         {errors.identifier && (
           <p id="login-identifier-error" role="alert" className="mt-1.5 text-xs text-red-600">
@@ -70,9 +88,6 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
       </div>
 
       <div>
-        <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-slate-700">
-          Contraseña
-        </label>
         <div className="relative">
           <Lock
             aria-hidden="true"
@@ -83,7 +98,7 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
             name="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder="••••••••"
+            placeholder=" "
             value={values.password}
             onChange={(e) => setFieldValue("password", e.target.value)}
             onBlur={() => handleBlur("password")}
@@ -92,6 +107,12 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
             aria-describedby={errors.password ? "login-password-error" : undefined}
             className={`${baseInputClass} pr-11 ${errors.password ? invalidInputClass : validInputClass}`}
           />
+          <label
+            htmlFor="login-password"
+            className="pointer-events-none absolute left-10 top-1 -translate-y-0 text-xs font-medium text-slate-500 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs peer-focus:font-medium peer-focus:text-sky-700"
+          >
+            Contraseña
+          </label>
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
@@ -134,19 +155,6 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
         </button>
       </div>
 
-      {message && (
-        <p
-          role={message.type === "error" ? "alert" : "status"}
-          className={`rounded-lg border px-3 py-2 text-sm ${
-            message.type === "error"
-              ? "border-red-200 bg-red-50 text-red-700"
-              : "border-sky-200 bg-sky-50 text-sky-800"
-          }`}
-        >
-          {message.text}
-        </p>
-      )}
-
       <button
         type="submit"
         disabled={isSubmitting}
@@ -162,6 +170,34 @@ export function LoginForm({ loginUseCase, onAuthenticated }: LoginFormProps) {
           "Iniciar sesión"
         )}
       </button>
+
+      {message && (
+        <div
+          role={message.type === "error" ? "alert" : "status"}
+          aria-live={message.type === "error" ? "assertive" : "polite"}
+          className={`fixed right-4 top-4 z-50 flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 rounded-xl border p-4 text-sm shadow-lg sm:right-6 sm:top-6 ${
+            message.type === "error"
+              ? "border-red-200 bg-white text-red-800 shadow-red-900/10"
+              : "border-sky-200 bg-white text-sky-800 shadow-sky-900/10"
+          }`}
+        >
+          <Info
+            aria-hidden="true"
+            className={`mt-0.5 h-4 w-4 shrink-0 ${
+              message.type === "error" ? "text-red-600" : "text-sky-600"
+            }`}
+          />
+          <p className="flex-1">{message.text}</p>
+          <button
+            type="button"
+            onClick={() => setMessage(null)}
+            aria-label="Cerrar notificación"
+            className="cursor-pointer rounded p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </form>
   );
 }

@@ -41,12 +41,12 @@ export function NewWorkItemForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-3 flex flex-wrap items-center gap-2 rounded border border-blue-200 bg-blue-50/40 p-2.5 text-xs"
+      className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-sky-100 bg-white/90 p-4 text-xs shadow-md shadow-sky-100/50"
     >
       <select
         value={type}
         onChange={(e) => setType(e.target.value as WorkItemType)}
-        className="rounded border border-gray-300 bg-white px-2 py-1.5 text-gray-800"
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
       >
         <option value="Epic">Epic</option>
         <option value="Feature">Feature</option>
@@ -60,13 +60,13 @@ export function NewWorkItemForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Enter work item title..."
         autoFocus
-        className="min-w-64 flex-1 rounded border border-gray-300 bg-white px-2.5 py-1.5 text-gray-900 focus:border-blue-500 focus:outline-none"
+        className="min-w-64 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
       />
 
       <select
         value={state}
         onChange={(e) => setState(e.target.value as WorkItemState)}
-        className="rounded border border-gray-300 bg-white px-2 py-1.5 text-gray-800"
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
       >
         <option value="New">New</option>
         <option value="Active">Active</option>
@@ -76,7 +76,7 @@ export function NewWorkItemForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="cursor-pointer rounded bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="cursor-pointer rounded-lg bg-sky-600 px-3.5 py-2 font-semibold text-white shadow-sm shadow-sky-600/20 transition hover:bg-sky-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? "Saving..." : "Add"}
       </button>
@@ -84,7 +84,7 @@ export function NewWorkItemForm({
       <button
         type="button"
         onClick={onCancel}
-        className="cursor-pointer rounded px-2.5 py-1.5 text-gray-600 hover:bg-gray-200/70 hover:text-gray-900"
+        className="cursor-pointer rounded-lg px-3 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-800"
       >
         Cancel
       </button>

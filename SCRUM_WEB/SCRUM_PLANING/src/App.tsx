@@ -45,44 +45,59 @@ export default function App({ userName, onLogout }: AppProps) {
   const isBacklogsView = activeSection === "Backlogs";
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-white text-sm text-gray-800">
-      <header className="flex h-12 items-center justify-between border-b border-gray-200 px-4">
-        <div className="flex items-center gap-2 text-gray-600">
-          <span className="font-semibold text-blue-600">Scrum Planning</span>
-          <span>/</span>
-          <span>Design Agile</span>
-          <span>/</span>
-          <span>Boards</span>
-          <span>/</span>
-          <span className="font-medium text-gray-900">{activeSection}</span>
+    <div className="flex min-h-screen w-full flex-col bg-linear-to-br from-sky-50 via-white to-blue-50 text-sm text-slate-700">
+      <header className="sticky top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-sky-100 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-sky-600 to-blue-600 text-xs font-bold text-white shadow-md shadow-sky-600/20">
+            SP
+          </span>
+          <div>
+            <p className="font-semibold tracking-tight text-slate-900">
+              Scrum Planning
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+              <span>Design Agile</span>
+              <span aria-hidden="true">/</span>
+              <span>Boards</span>
+              <span aria-hidden="true">/</span>
+              <span className="font-medium text-sky-700">{activeSection}</span>
+            </div>
+          </div>
         </div>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search work items..."
-          className="w-64 rounded border border-gray-300 bg-gray-50 px-3 py-1 text-xs focus:border-blue-500 focus:bg-white focus:outline-none"
-        />
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar elementos..."
+            aria-label="Buscar elementos de trabajo"
+            className="w-full min-w-48 max-w-xs rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-500/20"
+          />
 
-        {onLogout && (
-          <div className="flex items-center gap-3 text-xs text-gray-600">
-            {userName && <span>{userName}</span>}
-            <button
-              type="button"
-              onClick={onLogout}
-              className="cursor-pointer text-blue-600 hover:underline"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        )}
+          {onLogout && (
+            <div className="flex items-center gap-3 text-xs text-slate-600">
+              {userName && (
+                <span className="max-w-40 truncate rounded-full bg-sky-50 px-3 py-2 font-medium text-sky-800">
+                  {userName}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={onLogout}
+                className="cursor-pointer rounded-lg border border-sky-100 bg-white px-3 py-2 font-medium text-sky-700 transition hover:border-sky-200 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-52 border-r border-gray-200 bg-[#f3f2f1] p-2">
-          <div className="mb-3 flex items-center gap-2 px-2 py-1.5 font-semibold text-gray-900">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-purple-700 text-xs text-white">
+      <div className="flex flex-1 flex-col lg:flex-row">
+        <aside className="w-full border-b border-sky-100 bg-white/65 p-3 lg:w-56 lg:border-b-0 lg:border-r lg:p-4">
+          <div className="mb-4 flex items-center gap-2 px-2 py-1.5 font-semibold text-slate-900">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-sky-600 to-blue-600 text-xs text-white shadow-sm">
               DA
             </span>
             <span>Design Agile</span>
@@ -112,10 +127,10 @@ export default function App({ userName, onLogout }: AppProps) {
                   }}
                   className={`flex w-full items-center justify-between rounded px-3 py-2 text-left ${
                     isActive
-                      ? "bg-gray-300/70 font-semibold text-gray-900"
+                      ? "bg-sky-100 font-semibold text-sky-800 shadow-sm"
                       : isSelectable
-                        ? "cursor-pointer text-gray-700 hover:bg-gray-200/60"
-                        : "cursor-default text-gray-400"
+                        ? "cursor-pointer text-slate-600 hover:bg-sky-50 hover:text-sky-800"
+                        : "cursor-default text-slate-400"
                   }`}
                 >
                   <span>{menu}</span>
@@ -125,15 +140,20 @@ export default function App({ userName, onLogout }: AppProps) {
           </nav>
         </aside>
 
-        <main className="flex-1 overflow-auto p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-gray-900">
-              {activeSection === "Sprints"
-                ? (activeSprint?.name ?? "Sprints")
-                : isBacklogsView
-                  ? "Design Agile Team"
-                  : "Work Items"}
-            </h1>
+        <main className="min-w-0 flex-1 overflow-auto p-4 sm:p-6">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-sky-700">
+                Espacio de trabajo
+              </p>
+              <h1 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+                {activeSection === "Sprints"
+                  ? (activeSprint?.name ?? "Sprints")
+                  : isBacklogsView
+                    ? "Design Agile Team"
+                    : "Work Items"}
+              </h1>
+            </div>
 
             {isBacklogsView && (
               <select
@@ -141,7 +161,8 @@ export default function App({ userName, onLogout }: AppProps) {
                 onChange={(e) =>
                   setSelectedLevel(e.target.value as BacklogLevelFilter)
                 }
-                className="rounded border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                aria-label="Filtrar nivel de backlog"
+                className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 shadow-sm outline-none transition hover:border-sky-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
               >
                 <option value="All">Stories and Tasks</option>
                 <option value="Features">Features</option>
@@ -150,19 +171,26 @@ export default function App({ userName, onLogout }: AppProps) {
             )}
           </div>
 
-          <div className="mb-3 flex items-center gap-4 border-b border-gray-200 pb-2 text-xs">
+          <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-sky-100 pb-3 text-xs">
             <button
               type="button"
               onClick={() => setIsCreating((prev) => !prev)}
-              className="flex cursor-pointer items-center gap-1 font-medium text-blue-600 hover:underline"
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 font-semibold text-white shadow-sm shadow-sky-600/20 transition hover:bg-sky-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
             >
-              <span>+</span> New Work Item
+              <span aria-hidden="true" className="text-base leading-none">+</span>
+              Nuevo elemento
             </button>
-            <button type="button" className="text-gray-600 hover:text-gray-900">
-              View as Board
+            <button
+              type="button"
+              className="cursor-pointer rounded-lg px-3 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-800"
+            >
+              Vista de tablero
             </button>
-            <button type="button" className="text-gray-600 hover:text-gray-900">
-              Column Options
+            <button
+              type="button"
+              className="cursor-pointer rounded-lg px-3 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-800"
+            >
+              Opciones de columna
             </button>
           </div>
 
@@ -175,9 +203,9 @@ export default function App({ userName, onLogout }: AppProps) {
           )}
 
           {isLoading ? (
-            <p className="py-6 text-xs text-gray-500">Cargando backlog...</p>
+            <p className="py-6 text-xs text-slate-500">Cargando backlog...</p>
           ) : isError ? (
-            <p className="py-6 text-xs text-red-600">
+            <p className="rounded-xl border border-red-100 bg-red-50/80 px-4 py-3 text-xs text-red-700">
               Error al cargar el backlog.
             </p>
           ) : activeSection === "Sprints" ? (
@@ -192,30 +220,30 @@ export default function App({ userName, onLogout }: AppProps) {
               onRequestDelete={requestDeleteItem}
             />
           ) : isBacklogsView ? (
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-b border-gray-200 text-gray-500">
-                  <th className="w-12 py-2 font-medium">Order</th>
-                  <th className="py-2 font-medium">Title</th>
-                  <th className="w-28 py-2 font-medium">State</th>
-                  <th className="w-44 py-2 font-medium">
-                    Progress by all Work Items
-                  </th>
-                  <th className="w-16 py-2 text-right font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {visibleItems.map((item) => (
-                  <BacklogRow
-                    key={item.id}
-                    item={item}
-                    isCollapsed={collapsedIds.has(item.id)}
-                    onToggleCollapse={toggleCollapse}
-                    onRequestDelete={requestDeleteItem}
-                  />
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-sky-100/60">
+              <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500">
+                    <th className="w-12 py-3 font-medium">Orden</th>
+                    <th className="py-3 font-medium">Título</th>
+                    <th className="w-28 py-3 font-medium">Estado</th>
+                    <th className="w-44 py-3 font-medium">Progreso</th>
+                    <th className="w-16 py-3 text-right font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {visibleItems.map((item) => (
+                    <BacklogRow
+                      key={item.id}
+                      item={item}
+                      isCollapsed={collapsedIds.has(item.id)}
+                      onToggleCollapse={toggleCollapse}
+                      onRequestDelete={requestDeleteItem}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <WorkItemsTable
               items={flatItems}

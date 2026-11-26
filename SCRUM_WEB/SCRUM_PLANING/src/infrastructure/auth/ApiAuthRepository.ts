@@ -11,6 +11,7 @@ interface TokenResponseDto {
   access_token: string;
   token_type: string;
   message_user: string;
+  user_name?: string;
 }
 
 /**
@@ -44,7 +45,7 @@ export function createApiAuthRepository(apiBaseUrl: string): AuthRepository {
 
       const data = (await response.json()) as TokenResponseDto;
       return {
-        user: { userName: credentials.identifier },
+        user: { userName: data.user_name ?? credentials.identifier },
         accessToken: data.access_token,
         tokenType: data.token_type,
       };

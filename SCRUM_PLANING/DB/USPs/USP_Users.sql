@@ -249,15 +249,16 @@ BEGIN
             DECRYPTION BY CERTIFICATE CERT_SCRUMPLANNING;
 
             -- Se compara como VARBINARY para que la contraseña distinga mayusculas y minusculas
-            SELECT
+            SELECT TOP (1)
                 userId,
                 userName,
                 userFullName,
                 userRolId
             FROM [SQM_SECURITY].[TBL_Users] (NOLOCK)
-            WHERE userName = @i_userName
+            WHERE (userName = @i_userName OR userEmail = @i_userName)
               AND userEnable = 1
-              AND CONVERT(VARBINARY(256), [SQM_SECURITY].[Fn_DecryptByKey](userPassword)) = CONVERT(VARBINARY(256), @i_userPassword);
+              AND CONVERT(VARBINARY(256), [SQM_SECURITY].[Fn_DecryptByKey](userPassword)) = CONVERT(VARBINARY(256), @i_userPassword)
+            ORDER BY CASE WHEN userName = @i_userName THEN 0 ELSE 1 END;
 
             SET @w_totalRows = @@ROWCOUNT
 

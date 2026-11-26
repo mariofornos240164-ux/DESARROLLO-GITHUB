@@ -70,7 +70,8 @@ def login(
             user_name=str(user["userName"]),
             role_id=int(user["userRolId"])
         ),
-        message_user=result.message_user
+        message_user=result.message_user,
+        user_name=str(user["userName"])
     )
 
 @router.post(

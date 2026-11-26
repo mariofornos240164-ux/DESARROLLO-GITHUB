@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type ActiveSection,
@@ -42,12 +42,6 @@ export function useBacklog() {
     queryKey: ["sprints"],
     queryFn: fetchSprints,
   });
-
-  useEffect(() => {
-    if (sprints.length > 0 && !sprints.some((s) => s.id === selectedSprintId)) {
-      setSelectedSprintId(sprints[0].id);
-    }
-  }, [sprints, selectedSprintId]);
 
   const createMutation = useMutation({
     mutationFn: (input: CreateWorkItemInput) => createWorkItem(input),

@@ -4,7 +4,10 @@ import type { AuthSession } from "../../domain/auth/entities";
 import {
   type CredentialErrors,
   type CredentialField,
+  type CredentialValidationMessages,
+  DEFAULT_CREDENTIAL_VALIDATION_MESSAGES,
   validateCredentialField,
+  validateCredentials,
 } from "../../domain/auth/loginValidation";
 
 // Hook de la vista: maneja el estado del formulario y el mensaje que se
@@ -49,6 +52,7 @@ export interface UseLoginFormResult {
 export function useLoginForm(
   loginUseCase: LoginUseCase,
   onAuthenticated: (session: AuthSession) => void,
+  validationMessages: CredentialValidationMessages = DEFAULT_CREDENTIAL_VALIDATION_MESSAGES,
 ): UseLoginFormResult {
   const [values, setValues] = useState<LoginFormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<CredentialErrors>({});
@@ -63,7 +67,7 @@ export function useLoginForm(
     if (touched[field]) {
       setErrors((prev) => ({
         ...prev,
-        [field]: validateCredentialField(field, nextValues),
+        [field]: validateCredentialField(field, nextValues, validationMessages),
       }));
     }
   };
@@ -76,7 +80,7 @@ export function useLoginForm(
     setTouched((prev) => ({ ...prev, [field]: true }));
     setErrors((prev) => ({
       ...prev,
-      [field]: validateCredentialField(field, values),
+      [field]: validateCredentialField(field, values, validationMessages),
     }));
   };
 
@@ -100,7 +104,7 @@ export function useLoginForm(
         onAuthenticated(result.session);
         return;
       case "invalid-input":
-        setErrors(result.errors);
+        setErrors(validateCredentials(values, validationMessages));
         setMessage({ type: "error", text: "Por favor, corrige los errores en el formulario" });
         break;
       case "invalid-credentials":

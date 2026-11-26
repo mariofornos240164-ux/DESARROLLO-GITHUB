@@ -9,8 +9,8 @@ const typeBadge: Record<WorkItemType, { label: string; color: string }> = {
 
 const stateDot: Record<WorkItemState, string> = {
   New: "bg-gray-400",
-  Active: "bg-blue-600",
-  Closed: "bg-green-600",
+  Active: "bg-sky-600",
+  Closed: "bg-emerald-500",
 };
 
 interface BacklogRowProps {
@@ -27,10 +27,10 @@ export function BacklogRow({
   onRequestDelete,
 }: BacklogRowProps) {
   return (
-    <tr className="hover:bg-blue-50/40">
-      <td className="py-2 text-gray-500">{item.order}</td>
+    <tr className="transition-colors hover:bg-sky-50/70">
+      <td className="py-3 text-slate-500">{item.order}</td>
 
-      <td className="py-2">
+      <td className="py-3">
         <div
           className="flex items-center gap-1.5"
           style={{ paddingLeft: `${item.level * 20}px` }}
@@ -39,7 +39,7 @@ export function BacklogRow({
             <button
               type="button"
               onClick={() => onToggleCollapse(item.id)}
-              className="w-4 cursor-pointer text-center text-gray-500 hover:text-gray-900"
+              className="w-4 cursor-pointer text-center text-slate-400 transition hover:text-sky-700"
               aria-label={
                 isCollapsed ? "Expandir elemento" : "Colapsar elemento"
               }
@@ -57,8 +57,8 @@ export function BacklogRow({
           <span
             className={
               item.level === 0
-                ? "font-medium text-blue-700 hover:underline"
-                : "text-gray-800"
+                ? "font-medium text-sky-700 hover:underline"
+                : "text-slate-700"
             }
           >
             {item.title}
@@ -66,34 +66,34 @@ export function BacklogRow({
         </div>
       </td>
 
-      <td className="py-2">
+      <td className="py-3">
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${stateDot[item.state]}`} />
           <span>{item.state}</span>
         </div>
       </td>
 
-      <td className="py-2">
+      <td className="py-3">
         {item.progress !== undefined && (
           <div className="flex items-center gap-2">
-            <div className="h-3.5 w-28 overflow-hidden bg-gray-200">
+            <div className="h-2.5 w-28 overflow-hidden rounded-full bg-slate-100">
               <div
                 className={`h-full ${
-                  item.progress === 100 ? "bg-green-700" : "bg-blue-600"
+                  item.progress === 100 ? "bg-emerald-500" : "bg-sky-600"
                 }`}
                 style={{ width: `${item.progress}%` }}
               />
             </div>
-            <span className="text-[11px] text-gray-600">{item.progress}%</span>
+            <span className="text-[11px] text-slate-500">{item.progress}%</span>
           </div>
         )}
       </td>
 
-      <td className="py-2 text-right">
+      <td className="py-3 text-right">
         <button
           type="button"
           onClick={() => onRequestDelete(item)}
-          className="cursor-pointer rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-600"
+          className="cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
           aria-label={`Eliminar ${item.title}`}
         >
           Delete

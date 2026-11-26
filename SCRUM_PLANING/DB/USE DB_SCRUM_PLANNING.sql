@@ -13,10 +13,6 @@ EXEC [SQM_SECURITY].[USP_Users]
 
 SELECT @Numero AS Codigo, @MensajeUsuario AS MensajeUsuario, @MensajeTecnico AS MensajeTecnico
 
-ALTER TABLE SQM_SECURITY.TBL_Users
-ADD CONSTRAINT FK_TBL_Users_TBL_Roles FOREIGN KEY (userRolId)
-REFERENCES SQM_SECURITY.TBL_Roles(rolId)
-
 EXEC [SQM_SECURITY].[USP_Users]
     @i_userFullName = 'Jose Luis Espinoza',
     @i_userEmail = 'j',

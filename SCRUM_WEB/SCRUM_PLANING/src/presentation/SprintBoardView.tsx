@@ -15,8 +15,8 @@ const typeBadge: Record<WorkItemType, { label: string; color: string }> = {
 
 const stateDot: Record<WorkItemState, string> = {
   New: "bg-gray-400",
-  Active: "bg-blue-600",
-  Closed: "bg-green-600",
+  Active: "bg-sky-600",
+  Closed: "bg-emerald-500",
 };
 
 interface SprintBoardViewProps {
@@ -43,7 +43,11 @@ export function SprintBoardView({
   const [selectedToAdd, setSelectedToAdd] = useState<string>("");
 
   if (!activeSprint) {
-    return <p className="py-6 text-xs text-gray-500">No sprints configured.</p>;
+    return (
+      <p className="rounded-2xl border border-slate-200 bg-white/80 px-5 py-8 text-center text-sm text-slate-500">
+        No hay sprints configurados.
+      </p>
+    );
   }
 
   const totalCount = sprintItems.length;
@@ -62,12 +66,12 @@ export function SprintBoardView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-gray-200 bg-gray-50/70 p-3 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-4 text-xs shadow-md shadow-sky-100/50">
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={activeSprint.id}
             onChange={(e) => onSelectSprint(Number(e.target.value))}
-            className="rounded border border-gray-300 bg-white px-2.5 py-1.5 font-medium text-gray-900"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-medium text-slate-800 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
           >
             {sprints.map((sprint) => (
               <option key={sprint.id} value={sprint.id}>
@@ -76,22 +80,22 @@ export function SprintBoardView({
             ))}
           </select>
 
-          <span className="text-gray-600">
+          <span className="text-slate-500">
             {activeSprint.startDate} to {activeSprint.endDate}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-gray-600">
+          <span className="text-slate-500">
             Completed:{" "}
-            <strong className="text-gray-900">
+            <strong className="text-slate-800">
               {closedCount}/{totalCount}
             </strong>{" "}
             ({completionPct}%)
           </span>
-          <div className="h-3 w-28 overflow-hidden bg-gray-200">
+          <div className="h-2.5 w-28 overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`h-full ${completionPct === 100 ? "bg-green-700" : "bg-blue-600"}`}
+              className={`h-full ${completionPct === 100 ? "bg-emerald-500" : "bg-sky-600"}`}
               style={{ width: `${completionPct}%` }}
             />
           </div>
@@ -102,7 +106,7 @@ export function SprintBoardView({
         <select
           value={selectedToAdd}
           onChange={(e) => setSelectedToAdd(e.target.value)}
-          className="rounded border border-gray-300 bg-white px-2.5 py-1.5 text-gray-800"
+          className="min-w-64 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
         >
           <option value="">Assign work item to {activeSprint.name}...</option>
           {availableItems.map((item) => (
@@ -116,71 +120,73 @@ export function SprintBoardView({
           type="button"
           onClick={handleAdd}
           disabled={!selectedToAdd}
-          className="cursor-pointer rounded bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer rounded-lg bg-sky-600 px-3.5 py-2 font-semibold text-white shadow-sm shadow-sky-600/20 transition hover:bg-sky-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Add to Sprint
         </button>
       </div>
 
-      <table className="w-full border-collapse text-left text-xs">
-        <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
-            <th className="w-14 py-2 font-medium">ID</th>
-            <th className="w-24 py-2 font-medium">Type</th>
-            <th className="py-2 font-medium">Title</th>
-            <th className="w-28 py-2 font-medium">State</th>
-            <th className="w-36 py-2 text-right font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {sprintItems.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="py-6 text-center text-gray-500">
-                No work items assigned to this sprint.
-              </td>
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-sky-100/60">
+        <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-slate-500">
+              <th className="w-14 py-3 font-medium">ID</th>
+              <th className="w-24 py-3 font-medium">Tipo</th>
+              <th className="py-3 font-medium">Título</th>
+              <th className="w-28 py-3 font-medium">Estado</th>
+              <th className="w-36 py-3 text-right font-medium">Acciones</th>
             </tr>
-          ) : (
-            sprintItems.map((item) => (
-              <tr key={item.id} className="hover:bg-blue-50/40">
-                <td className="py-2 text-gray-500">#{item.id}</td>
-                <td className="py-2">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className={typeBadge[item.type].color}>
-                      {typeBadge[item.type].label}
-                    </span>
-                    <span>{item.type}</span>
-                  </span>
-                </td>
-                <td className="py-2 text-gray-800">{item.title}</td>
-                <td className="py-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2 w-2 rounded-full ${stateDot[item.state]}`}
-                    />
-                    <span>{item.state}</span>
-                  </div>
-                </td>
-                <td className="space-x-2 py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onRemoveItemFromSprint(item.id)}
-                    className="cursor-pointer rounded px-2 py-0.5 text-[11px] text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  >
-                    Unassign
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRequestDelete(item)}
-                    className="cursor-pointer rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {sprintItems.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-slate-500">
+                  No hay elementos asignados a este sprint.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              sprintItems.map((item) => (
+                <tr key={item.id} className="transition-colors hover:bg-sky-50/70">
+                  <td className="py-3 text-slate-500">#{item.id}</td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className={typeBadge[item.type].color}>
+                        {typeBadge[item.type].label}
+                      </span>
+                      <span>{item.type}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 text-slate-700">{item.title}</td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`h-2 w-2 rounded-full ${stateDot[item.state]}`}
+                      />
+                      <span>{item.state}</span>
+                    </div>
+                  </td>
+                  <td className="space-x-2 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onRemoveItemFromSprint(item.id)}
+                      className="cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-800"
+                    >
+                      Quitar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRequestDelete(item)}
+                      className="cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -15,3 +15,4 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     message_user: str
+    user_name: str

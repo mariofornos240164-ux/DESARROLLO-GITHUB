@@ -33,7 +33,7 @@ function BrandMark({ className = "" }: { className?: string }) {
 
 export function BrandLogo({ showSlogan = true, className = "" }: BrandLogoProps) {
   return (
-    <div className={`flex flex-col items-center text-center ${className}`}>
+    <div className={`flex flex-col items-start text-left ${className}`}>
       <div className="flex items-center gap-3">
         <BrandMark className="h-11 w-11 shadow-md shadow-sky-500/20 sm:h-12 sm:w-12" />
         <span className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[26px]">
@@ -41,7 +41,7 @@ export function BrandLogo({ showSlogan = true, className = "" }: BrandLogoProps)
         </span>
       </div>
       {showSlogan && (
-        <p className="mt-3 max-w-xs text-sm text-slate-500">{BRAND_SLOGAN}</p>
+        <p className="mt-3 max-w-md text-sm text-slate-500">{BRAND_SLOGAN}</p>
       )}
     </div>
   );
