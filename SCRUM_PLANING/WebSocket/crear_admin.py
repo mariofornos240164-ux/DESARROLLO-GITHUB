@@ -5,7 +5,8 @@
 #     python crear_admin.py
 #
 # Antes debe existir el rol de administrador en SQM_SECURITY.TBL_Roles
-# (rolId = JWT_ADMIN_ROLE_ID del .env, normalmente 1).
+# (rolId = JWT_ADMIN_ROLE_ID del .env). Para ver el ID correcto:
+#   SELECT rolId, rolName, rolEnable FROM SQM_SECURITY.TBL_Roles;
 
 import os
 from dotenv import load_dotenv

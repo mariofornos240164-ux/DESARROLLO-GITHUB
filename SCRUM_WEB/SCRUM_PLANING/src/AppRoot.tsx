@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import App from "./App.tsx";
 import type { AuthSession } from "./domain/auth/entities";
 import { authUseCases } from "./infrastructure/auth/authContainer";
+import { setUnauthorizedHandler } from "./infrastructure/httpClient";
 import { LoginPage } from "./presentation/auth/LoginPage";
 
 /** Muestra el Login hasta que haya una sesión; después, la app de Scrum. */
@@ -24,9 +26,24 @@ export default function AppRoot() {
     );
   }, [isDarkMode]);
 
+  const queryClient = useQueryClient();
+
+  // Al terminar la sesión se borran los datos en caché, para que el
+  // siguiente usuario no vea información del anterior.
+  const endSession = useCallback(() => {
+    queryClient.clear();
+    setSession(null);
+  }, [queryClient]);
+
+  // Si el backend rechaza el token (por ejemplo, venció), se vuelve al login.
+  useEffect(() => {
+    setUnauthorizedHandler(endSession);
+    return () => setUnauthorizedHandler(null);
+  }, [endSession]);
+
   const handleLogout = () => {
     authUseCases.logout.execute();
-    setSession(null);
+    endSession();
   };
 
   return session ? (

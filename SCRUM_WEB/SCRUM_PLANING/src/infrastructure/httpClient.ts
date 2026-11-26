@@ -1,24 +1,15 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-const SESSION_KEY = "scrum-planning.session";
+import { createBrowserSessionRepository } from "./auth/BrowserSessionRepository";
 
-function getAccessToken(): string | null {
-  try {
-    const raw =
-      localStorage.getItem(SESSION_KEY) ?? sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const session: unknown = JSON.parse(raw);
-    if (
-      typeof session === "object" &&
-      session !== null &&
-      "accessToken" in session &&
-      typeof session.accessToken === "string"
-    ) {
-      return session.accessToken;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+// La sesión se lee del mismo repositorio que usa el login (una sola fuente).
+const sessionRepository = createBrowserSessionRepository();
+
+// Se llama cuando el backend rechaza el token (vencido o inválido).
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
 }
 
 export async function httpRequest<T>(
@@ -29,15 +20,21 @@ export async function httpRequest<T>(
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const accessToken = getAccessToken();
-  if (accessToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+  const session = sessionRepository.load();
+  if (session && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${session.accessToken}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
+
+  if (response.status === 401 && session) {
+    // El token venció: se cierra la sesión y la app vuelve al login.
+    sessionRepository.clear();
+    unauthorizedHandler?.();
+  }
 
   if (!response.ok) {
     const errorText = await response.text();

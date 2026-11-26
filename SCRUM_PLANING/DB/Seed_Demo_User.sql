@@ -9,6 +9,7 @@ DECLARE @TestEmail VARCHAR(80) = 'demo.scrum@example.test';
 DECLARE @TestPassword VARCHAR(256) = 'ScrumDemo#2026';
 DECLARE @TestFullName VARCHAR(80) = 'Usuario de prueba Scrum';
 DECLARE @TestRoleId INT;
+DECLARE @TestRoleEnabled BIT;
 DECLARE @TestUserId INT;
 DECLARE @MatchingUserCount INT;
 DECLARE @StatusCode INT;
@@ -40,18 +41,15 @@ IF @LockResult < 0
     THROW 51002, 'No se pudo obtener el bloqueo para preparar el usuario de prueba.', 1;
 
 BEGIN TRY
-    SELECT TOP (1) @TestRoleId = rolId
+    -- La cuenta demo usa SIEMPRE su propio rol 'Usuario de prueba'.
+    -- Nunca toma "el primer rol activo", porque ese podria ser el rol Admin.
+    SELECT TOP (1) @TestRoleId = rolId, @TestRoleEnabled = rolEnable
     FROM [SQM_SECURITY].[TBL_Roles]
-    WHERE rolEnable = 1
+    WHERE rolName = 'Usuario de prueba'
     ORDER BY rolId;
 
-    IF @TestRoleId IS NULL
+    IF @TestRoleId IS NULL OR @TestRoleEnabled = 0
     BEGIN
-        SELECT TOP (1) @TestRoleId = rolId
-        FROM [SQM_SECURITY].[TBL_Roles]
-        WHERE rolName = 'Usuario de prueba'
-        ORDER BY rolId;
-
         SET @StatusCode = NULL;
         SET @UserMessage = NULL;
         SET @TechnicalMessage = NULL;
